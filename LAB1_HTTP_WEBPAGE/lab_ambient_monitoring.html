@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لوحة مراقبة معمل التحكم - كلية التقنية الإلكترونية</title>
+
+    <style>
+      /* --- 1. القواعد العامة والمتغيرات --- */
+      :root {
+        --bg-color: #1a1a2e;
+        --card-color: #16213e;
+        --accent-color: #0f3460;
+        --text-color: #e94560;
+        --sub-text: #ffffff;
+        --temp-color: #ff4757;
+        --humi-color: #2ed573;
+        --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font-family);
+        background-color: var(--bg-color);
+        color: var(--sub-text);
+        display: flex;
+        flex-direction: column; /* ترتيب العناصر عمودياً لجعل الهيدر في الأعلى */
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* --- 2. الصف العلوي (ممتد ملء الشاشة) --- */
+      .top-header {
+        width: 100%;
+        background-color: var(--card-color);
+        padding: 1.5rem 0;
+        text-align: center;
+        border-bottom: 2px solid var(--accent-color);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        z-index: 100;
+      }
+
+      .top-header h1 {
+        font-size: 2rem;
+        color: var(--sub-text);
+        margin-bottom: 0.5rem;
+      }
+
+      .top-header p {
+        font-size: 1.2rem;
+        color: var(--text-color);
+      }
+
+      /* --- 3. الحاوية الرئيسية (تجمع السايدبار والمحتوى) --- */
+      .app-container {
+        display: flex;
+        flex: 1; /* تأخذ باقي ارتفاع الشاشة بعد الهيدر */
+        width: 100%;
+      }
+
+      /* القائمة الجانبية */
+      .sidebar {
+        width: 250px;
+        background-color: var(--card-color);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-left: 2px solid var(--accent-color);
+      }
+
+      .sidebar h2 {
+        color: var(--text-color);
+        font-size: 1.5rem;
+        text-align: center;
+      }
+
+      .datetime-container {
+        text-align: center;
+        background-color: var(--bg-color);
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      #time {
+        font-size: 1.6rem;
+        font-weight: bold;
+      }
+      #date {
+        font-size: 0.85rem;
+        color: #bdc3c7;
+        margin-top: 5px;
+      }
+
+      /* منطقة العرض الرئيسية */
+      .main-content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+      }
+
+      .dashboard-grid {
+        display: flex;
+        gap: 4rem;
+      }
+
+      .sensor-card {
+        background-color: var(--card-color);
+        padding: 2.5rem;
+        border-radius: 20px;
+        width: 320px;
+        height: 320px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s ease;
+      }
+
+      .sensor-card:hover {
+        transform: translateY(-10px);
+      }
+
+      /* --- 4. الدوائر (SVG) باستخدام متغيرات CSS --- */
+      .progress-container {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      svg {
+        transform: rotate(-90deg);
+      }
+
+      .circle-bg {
+        fill: none;
+        stroke: #2c3e50;
+        stroke-width: 15px;
+      }
+
+      .circle-progress {
+        fill: none;
+        stroke-width: 15px;
+        stroke-linecap: round;
+        stroke-dasharray: 440;
+        /* الحساب بناءً على المتغيرات القادمة من السكريبت */
+        stroke-dashoffset: calc(440 - (var(--p, 0) / var(--max, 100)) * 440);
+        transition: stroke-dashoffset 1s ease-in-out;
+      }
+
+      #temp-circle {
+        stroke: var(--temp-color);
+      }
+      #humi-circle {
+        stroke: var(--humi-color);
+      }
+
+      .progress-value {
+        position: absolute;
+        font-size: 2.2rem;
+        font-weight: bold;
+      }
+
+      .sensor-label {
+        margin-top: 2rem;
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: #bdc3c7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-header">
+      <h1>كلية التقنية الإلكترونية-طرابلس</h1>
+      <p>مراقبة درجة الحرارة والرطوبة بمعمل التحكم الآلي</p>
+    </div>
+
+    <div class="app-container">
+      <div class="sidebar">
+        <h2>لوحة التحكم</h2>
+        <div class="datetime-container">
+          <div id="time">00:00:00</div>
+          <div id="date">جاري التحميل...</div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="dashboard-grid">
+          <div class="sensor-card">
+            <div class="progress-container">
+              <svg width="160" height="160">
+                <circle class="circle-bg" cx="80" cy="80" r="70"></circle>
+                <circle
+                  class="circle-progress"
+                  id="temp-circle"
+                  cx="80"
+                  cy="80"
+                  r="70"
+                ></circle>
+              </svg>
+              <div class="progress-value" id="temp-value">--°C</div>
+            </div>
+            <div class="sensor-label">الحرارة</div>
+          </div>
+
+          <div class="sensor-card">
+            <div class="progress-container">
+              <svg width="160" height="160">
+                <circle class="circle-bg" cx="80" cy="80" r="70"></circle>
+                <circle
+                  class="circle-progress"
+                  id="humi-circle"
+                  cx="80"
+                  cy="80"
+                  r="70"
+                ></circle>
+              </svg>
+              <div class="progress-value" id="humi-value">--%</div>
+            </div>
+            <div class="sensor-label">الرطوبة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function updateDateTime() {
+        const now = new Date();
+        document.getElementById("time").textContent =
+          now.toLocaleTimeString("ar-EG");
+        document.getElementById("date").textContent = now.toLocaleDateString(
+          "ar-EG",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          },
+        );
+      }
+
+      async function loadTemp() {
+        try {
+          const response = await fetch("http://192.168.1.13");
+          if (!response.ok) throw new Error();
+
+          const data = await response.json();
+          console.log("Data updated: ", data);
+          // تحديث النصوص
+          document.getElementById("temp-value").textContent = data.temp + "°C";
+          document.getElementById("humi-value").textContent = data.hum + "%";
+
+          // تحديث المتغيرات في CSS (بدون معادلات في السكريبت)
+          const tempCircle = document.getElementById("temp-circle");
+          const humiCircle = document.getElementById("humi-circle");
+
+          tempCircle.style.setProperty("--p", data.temp);
+          tempCircle.style.setProperty("--max", 50);
+
+          humiCircle.style.setProperty("--p", data.hum);
+          humiCircle.style.setProperty("--max", 100);
+        } catch (error) {
+          console.log("error: ", error);
+          document.getElementById("temp-value").textContent = "---";
+          document.getElementById("humi-value").textContent = "---";
+          document.getElementById("temp-circle").style.setProperty("--p", 0);
+          document.getElementById("humi-circle").style.setProperty("--p", 0);
+        }
+      }
+
+      setInterval(updateDateTime, 1000);
+      updateDateTime();
+      setInterval(loadTemp, 1000);
+      loadTemp();
+    </script>
+  </body>
+</html>
