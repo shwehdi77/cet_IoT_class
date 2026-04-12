@@ -33,12 +33,9 @@ void setup()
   Serial.println("Connected to WiFi");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-  const char * headerkeys[] = {"User-Agent", "Host", "Accept-Language"} ;
-  size_t headerkeyssize = sizeof(headerkeys) / sizeof(char*);
   server.collectHeaders(headerkeys, headerkeyssize);
   server.on("/", send_data);
-    server.begin();
-  
+  server.begin();
   Serial.println("HTTP server started");
 }
 //======================================================================
@@ -53,19 +50,11 @@ void read_sensor()
 void send_data()
                   {
                     Serial.println("--- New Request Received ---");
-
-                        // حلقة تكرارية لطباعة جميع الترويسات (Headers) المستلمة من المتصفح
-                        // for (int i = 0; i < server.headers(); i++) {
-                        //   Serial.print(server.headerName(i));  // اسم الترويسة (مثل User-Agent)
-                        //   Serial.print(": ");
-                        //   Serial.println(server.header(i));    // محتوى الترويسة
-                        // }
                     read_sensor();
                     server.sendHeader("Access-Control-Allow-Origin", "*");
                     doc["temp"] = TEMP;
                     doc["hum"]  =  HUM;    
                     char buffer[128];
                     serializeJson(doc, buffer);
-                    //client.publish("greenhouse/data", buffer);
                     server.send(200, "application/json", buffer);
                   }                  
