@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <body>
+    <div>
+      <span class="label-text">Temp = </span>
+      <span id="temp">Loading...</span>
+      <span class="unit">°C</span>
+    </div>
+    <div>
+      <span class="label-text">Humi = </span>
+      <span id="humi">Loading...</span>
+      <span class="unit"> %</span>
+    </div>
+
+    <script>
+      // تعريف دالة غير متزامنة (async) لجلب القراءات من اللوحة دون تجميد الواجهة
+      async function loadTemp() {
+        // إرسال طلب HTTP GET إلى IP لوحة Wemos وانتظار استلام الرد
+        const response = await fetch("http://192.168.1.13");
+        // تحويل نص الرد المستلم إلى كائن برمجى بتنسيق JSON
+        const data = await response.json();
+        // تحديث محتوى عنصر الحرارة في الصفحة بالقيمة القادمة من الحساس (data.temp)
+        document.getElementById("temp").textContent = data.temp;
+        // تحديث محتوى عنصر الرطوبة في الصفحة بالقيمة القادمة من الحساس (data.hum)
+        document.getElementById("humi").textContent = data.hum;
+        // طباعة البيانات المستلمة في Console المتصفح لأغراض المراقبة والتصحيح
+        console.log("Data updated: ", data);
+      }
+      // استدعاء الدالة لمرة واحدة فور فتح الصفحة لعرض البيانات مباشرة
+      loadTemp();
+      // ضبط مؤقت زمني لتكرار تنفيذ الدالة تلقائياً كل 1000 ملي ثانية (ثانية واحدة)
+      setInterval(loadTemp, 1000);
+    </script>
+  </body>
+</html>

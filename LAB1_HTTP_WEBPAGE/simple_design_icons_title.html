@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Dashboard - Wemos D1 Mini</title>
+    <style>
+      /* 1. إعدادات الصفحة الأساسية لتشغل كامل مساحة الشاشة */
+      body,
+      html {
+        margin: 0; /* إلغاء الهوامش لضمان عدم وجود فراغات بيضاء حول الصفحة */
+        padding: 0;
+        height: 100%; /* جعل الصفحة تمتد على كامل طول الشاشة */
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex; /* تفعيل نظام Flexbox لتوزيع العناصر */
+        flex-direction: column; /* ترتيب الصفوف (العنوان ثم البيانات) بشكل رأسي */
+      }
+
+      /* 2. تنسيق الصف العلوي (Header) - يمثل ثلث الشاشة */
+      .top-row {
+        flex: 1; /* تحديد مساحة الثلث من إجمالي مساحة الشاشة */
+        background-color: #f8f9fa;
+        display: flex;
+        /* row-reverse: هي الخاصية التي جعلت الصورة تظهر أولاً من اليمين والنص يتبعها من اليسار */
+        flex-direction: row-reverse;
+        justify-content: center; /* توسيط الكتلة (الصورة + النص) في منتصف الصف */
+        align-items: center; /* التوسيط الرأسي داخل الصف */
+        gap: 15px; /* المسافة الفاصلة بين يسار الصورة وبداية العنوان */
+        border-bottom: 2px solid #ddd;
+      }
+
+      .top-row h1 {
+        margin: 0; /* تصفير الهوامش التلقائية لتقريب النص من الصورة */
+        font-size: 1.8em;
+        direction: rtl; /* لضمان تنسيق الجملة العربية بشكل صحيح */
+        text-align: right; /* محاذاة النص باتجاه الصورة (جهة اليمين) */
+      }
+
+      .top-row .icon {
+        width: 110px;
+        height: auto;
+        margin: 0; /* إلغاء أي هوامش خارجية للأيقونة */
+      }
+
+      /* 3. تنسيق الصف السفلي (Data Display) - يمثل ثلثي الشاشة */
+      .bottom-row {
+        flex: 2; /* تحديد مساحة الثلثين المتبقية للقراءات */
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: row; /* عرض بطاقات الحساسات بجانب بعضها البعض */
+        justify-content: space-around; /* توزيع الحساسات بمسافات متساوية وتلقائية */
+        align-items: center;
+      }
+
+      /* 4. تنسيق بطاقة الحساس (Sensor Card) */
+      .sensor-card {
+        text-align: center; /* توسيط النصوص والأرقام تحت الأيقونة */
+        padding: 20px;
+      }
+
+      /* تنسيق الأيقونات الخاصة بالحرارة والرطوبة */
+      .icon {
+        width: 100px;
+        height: 100px;
+        display: block; /* جعل الأيقونة عنصراً مستقلاً ليظهر النص أسفلها */
+        margin: 0 auto 15px; /* توسيط الأيقونة أفقياً وترك مسافة تحتها */
+      }
+
+      /* 5. تنسيق النصوص والقيم الرقمية المستلمة */
+      .label-text {
+        font-weight: bold;
+        font-size: 1.3em;
+        color: #555;
+      }
+
+      #temp,
+      #humi {
+        font-size: 1.6em;
+        color: #2c3e50; /* لون غامق لتمييز القراءات الرقمية */
+        font-family:
+          "Courier New", Courier, monospace; /* خط رقمي يشبه شاشات الآلات */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="top-row">
+      <img src="temphumi.png" class="icon" alt="Temperature Icon" />
+      <h1>مراقبة درجة حرارة ورطوبة معمل التحكم الآلي</h1>
+    </div>
+
+    <div class="bottom-row">
+      <div class="sensor-card">
+        <img src="temp.png" class="icon" alt="Temperature" />
+        <span class="label-text">Temp = </span>
+        <span id="temp">Loading...</span>
+      </div>
+
+      <div class="sensor-card">
+        <img src="humi.png" class="icon" alt="Humidity" />
+        <span class="label-text">Humi = </span>
+        <span id="humi">Loading...</span>
+      </div>
+    </div>
+
+    <script>
+      // دالة لجلب البيانات من الـ Wemos D1 Mini باستخدام Fetch API
+      async function loadData() {
+        try {
+          // إرسال طلب HTTP GET إلى العنوان المحلي للوحة
+          const response = await fetch("http://192.168.1.13");
+
+          // تحويل رد السيرفر من نص خام إلى كائن JSON برمجي
+          const data = await response.json();
+
+          // تحديث العناصر في صفحة HTML بالقيم الحقيقية المستخرجة من الـ JSON
+          document.getElementById("temp").textContent = data.temp + " °C";
+          document.getElementById("humi").textContent = data.hum + " %";
+        } catch (error) {
+          // في حال فشل الاتصال (أوفلاين)، يتم تسجيل الخطأ في المتصفح
+          console.error("خطأ في جلب البيانات:", error);
+        }
+      }
+
+      // ضبط تنفيذ دالة الجلب بشكل متكرر كل ثانية واحدة (1000 ميلي ثانية)
+      setInterval(loadData, 1000);
+
+      // استدعاء الدالة فور تحميل الصفحة لأول مرة دون انتظار مرور ثانية
+      loadData();
+    </script>
+  </body>
+</html>
