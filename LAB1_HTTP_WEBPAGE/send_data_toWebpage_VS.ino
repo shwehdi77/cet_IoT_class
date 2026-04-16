@@ -33,7 +33,6 @@ void setup()
   Serial.println("Connected to WiFi");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
-  server.collectHeaders(headerkeys, headerkeyssize);
   server.on("/", send_data);
   server.begin();
   Serial.println("HTTP server started");
