@@ -1,0 +1,2971 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Industrial Water Tank Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+    />
+    <style>
+      /* ===== RESET & BASE ===== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg-dark: #0a0e1a;
+        --bg-panel: #0f1628;
+        --bg-card: #131d35;
+        --accent-blue: #00d4ff;
+        --accent-cyan: #00ffcc;
+        --accent-orange: #ff6b35;
+        --accent-red: #ff3d3d;
+        --accent-green: #39ff14;
+        --accent-yellow: #ffd700;
+        --water-blue: #1a9fdb;
+        --water-light: #5dd8ff;
+        --pipe-color: #7a8ba0;
+        --metal-dark: #1e2a3a;
+        --metal-mid: #2d3f55;
+        --metal-light: #4a607c;
+        --text-primary: #e0f4ff;
+        --text-secondary: #8ab4cc;
+        --border-glow: rgba(0, 212, 255, 0.3);
+        --shadow-blue: 0 0 20px rgba(0, 212, 255, 0.3);
+      }
+
+      body {
+        font-family: "Rajdhani", sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* ===== INDUSTRIAL BACKGROUND ===== */
+      .bg-industrial {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse at 20% 50%,
+            rgba(0, 80, 120, 0.12) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse at 80% 20%,
+            rgba(0, 60, 100, 0.1) 0%,
+            transparent 50%
+          ),
+          linear-gradient(180deg, #060b14 0%, #0a0e1a 50%, #080d16 100%);
+      }
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(0, 212, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 212, 255, 0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+      .bg-scanline {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.05) 2px,
+          rgba(0, 0, 0, 0.05) 4px
+        );
+        animation: scanMove 8s linear infinite;
+      }
+      @keyframes scanMove {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 0 100px;
+        }
+      }
+
+      /* Floating particles */
+      .particles {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+        opacity: 0;
+        animation: particleFloat linear infinite;
+      }
+      @keyframes particleFloat {
+        0% {
+          transform: translateY(100vh) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.6;
+        }
+        90% {
+          opacity: 0.3;
+        }
+        100% {
+          transform: translateY(-10px) translateX(30px);
+          opacity: 0;
+        }
+      }
+
+      /* ===== LAYOUT ===== */
+      .wrapper {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ===== HEADER ===== */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 32px;
+        background: linear-gradient(
+          90deg,
+          rgba(15, 22, 40, 0.95) 0%,
+          rgba(19, 29, 53, 0.95) 100%
+        );
+        border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+        box-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(10px);
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .logo-icon {
+        font-size: 2rem;
+        color: var(--accent-cyan);
+        filter: drop-shadow(0 0 8px var(--accent-cyan));
+      }
+      .header-title {
+        font-family: "Orbitron", monospace;
+      }
+      .header-title h1 {
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: var(--accent-blue);
+        letter-spacing: 3px;
+        text-shadow: 0 0 15px rgba(0, 212, 255, 0.7);
+      }
+      .header-title p {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        letter-spacing: 4px;
+        text-transform: uppercase;
+      }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+      .system-clock {
+        font-family: "Orbitron", monospace;
+        font-size: 1rem;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 10px var(--accent-cyan);
+        letter-spacing: 2px;
+      }
+      .header-badge {
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 6px;
+        padding: 4px 12px;
+        font-size: 0.7rem;
+        color: var(--accent-blue);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      /* ===== WS STATUS BAR ===== */
+      .ws-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 32px;
+        background: rgba(10, 14, 26, 0.8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .ws-status-group {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .ws-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+        letter-spacing: 1px;
+      }
+      .ws-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-red);
+        box-shadow: 0 0 8px var(--accent-red);
+        transition: all 0.4s;
+      }
+      .ws-dot.connected {
+        background: var(--accent-green);
+        box-shadow: 0 0 10px var(--accent-green);
+        animation: pulse 2s infinite;
+      }
+      .ws-dot.connecting {
+        background: var(--accent-yellow);
+        box-shadow: 0 0 10px var(--accent-yellow);
+        animation: blink 0.5s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.3);
+          opacity: 0.7;
+        }
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .ws-label {
+        color: var(--text-secondary);
+        font-size: 0.72rem;
+      }
+      .ws-value {
+        color: var(--accent-cyan);
+        font-family: "Orbitron", monospace;
+        font-size: 0.72rem;
+      }
+      .ws-ip-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .ws-input {
+        background: rgba(0, 212, 255, 0.06);
+        border: 1px solid rgba(0, 212, 255, 0.25);
+        border-radius: 6px;
+        color: var(--accent-cyan);
+        font-family: "Orbitron", monospace;
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        outline: none;
+        width: 210px;
+        transition: border 0.3s;
+      }
+      .ws-input:focus {
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+      }
+      .ws-btn {
+        background: rgba(0, 212, 255, 0.15);
+        border: 1px solid rgba(0, 212, 255, 0.4);
+        border-radius: 6px;
+        color: var(--accent-blue);
+        font-family: "Orbitron", monospace;
+        font-size: 0.7rem;
+        padding: 5px 14px;
+        cursor: pointer;
+        letter-spacing: 1px;
+        transition: all 0.3s;
+      }
+      .ws-btn:hover {
+        background: rgba(0, 212, 255, 0.3);
+        box-shadow: var(--shadow-blue);
+      }
+      .ws-btn.disconnect {
+        border-color: rgba(255, 61, 61, 0.5);
+        color: var(--accent-red);
+        background: rgba(255, 61, 61, 0.1);
+      }
+      .ws-btn.disconnect:hover {
+        background: rgba(255, 61, 61, 0.25);
+      }
+      .ws-log {
+        font-family: "Orbitron", monospace;
+        font-size: 0.65rem;
+        color: var(--text-secondary);
+        max-width: 340px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ===== MAIN CONTENT ===== */
+      .main-content {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 320px 1fr 280px;
+        grid-template-rows: 1fr;
+        gap: 20px;
+        padding: 20px 28px;
+        max-width: 1500px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      /* ===== PANEL CARD ===== */
+      .panel {
+        background: linear-gradient(
+          145deg,
+          var(--bg-card) 0%,
+          rgba(19, 29, 53, 0.9) 100%
+        );
+        border: 1px solid rgba(0, 212, 255, 0.15);
+        border-radius: 12px;
+        box-shadow:
+          0 4px 30px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        position: relative;
+        overflow: hidden;
+      }
+      .panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--accent-blue),
+          transparent
+        );
+        opacity: 0.7;
+      }
+      .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 20px 10px;
+        border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+      }
+      .panel-header h2 {
+        font-family: "Orbitron", monospace;
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+        text-transform: uppercase;
+      }
+      .panel-header .panel-icon {
+        color: var(--accent-blue);
+        font-size: 1rem;
+      }
+      .panel-body {
+        padding: 18px 20px;
+      }
+
+      /* ===== LEFT PANEL – CONTROLS ===== */
+      .controls-panel {
+        grid-column: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .controls-panel .panel-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      /* Slider group */
+      .slider-group {
+        /* Container for each slider and its labels */
+        display: flex;
+        flex-direction: column;
+      }
+      .slider-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+      }
+      .slider-label span {
+        font-family: "Orbitron", monospace;
+        color: var(--accent-cyan);
+        font-size: 0.8rem;
+      }
+      .slider-desc {
+        font-size: 0.68rem;
+        color: rgba(138, 180, 204, 0.6);
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+      }
+      .custom-slider {
+        -webkit-appearance: none;
+        appearance: none; /* Remove default styling */
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .slider-tank1 {
+        background: linear-gradient(
+          90deg,
+          var(--accent-blue) 0%,
+          rgba(0, 212, 255, 0.2) 100%
+        );
+      }
+      .slider-tank2 {
+        background: linear-gradient(
+          90deg,
+          var(--accent-cyan) 0%,
+          rgba(0, 255, 204, 0.2) 100%
+        );
+      }
+      .custom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+        border: 2px solid #fff;
+        box-shadow: 0 0 10px var(--accent-blue);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .custom-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+        box-shadow: 0 0 18px var(--accent-blue);
+      }
+      .slider-track {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        font-size: 0.62rem;
+        color: rgba(138, 180, 204, 0.4);
+      }
+
+      /* Divider */
+      .h-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 212, 255, 0.2),
+          transparent
+        );
+      }
+
+      /* Refill button */
+      .btn-refill {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(
+          135deg,
+          rgba(0, 212, 255, 0.15),
+          rgba(0, 255, 204, 0.1)
+        );
+        border: 1px solid rgba(0, 212, 255, 0.4);
+        border-radius: 10px;
+        color: var(--accent-cyan);
+        font-family: "Orbitron", monospace;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-refill::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(0, 255, 204, 0.2),
+          transparent
+        );
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .btn-refill:hover {
+        box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+        transform: translateY(-2px);
+      }
+      .btn-refill:hover::before {
+        opacity: 1;
+      }
+      .btn-refill:active {
+        transform: translateY(0);
+        box-shadow: none;
+      }
+      .btn-refill.active {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 255, 204, 0.3),
+          rgba(0, 212, 255, 0.2)
+        );
+        box-shadow: 0 0 30px rgba(0, 255, 204, 0.6);
+        animation: btnPulse 1s ease-in-out infinite;
+      }
+      @keyframes btnPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(0, 255, 204, 0.8);
+        }
+      }
+      .btn-refill i {
+        font-size: 1.1rem;
+      }
+
+      /* Data readouts */
+      .data-readouts {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .readout-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(0, 212, 255, 0.08);
+        border-radius: 8px;
+        padding: 10px 14px;
+      }
+      .readout-label {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        letter-spacing: 1px;
+      }
+      .readout-value {
+        font-family: "Orbitron", monospace;
+        font-size: 0.95rem;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+      }
+      .readout-unit {
+        font-size: 0.65rem;
+        color: var(--text-secondary);
+        margin-left: 2px;
+      }
+
+      /* ===== CENTER PANEL – TANKS VISUALIZATION ===== */
+      .tanks-panel {
+        grid-column: 2;
+        display: flex;
+        flex-direction: column;
+      }
+      .tanks-panel .panel-body {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+      }
+      #tanks-svg {
+        width: 100%;
+        max-width: 580px;
+        height: 100%;
+        min-height: 500px;
+      }
+
+      /* ===== RIGHT PANEL – STATUS & VALVES ===== */
+      .status-panel {
+        grid-column: 3;
+        display: flex;
+        flex-direction: column;
+      }
+      .status-panel .panel-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      /* Valve card */
+      .valve-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 212, 255, 0.12);
+        border-radius: 10px;
+        padding: 14px;
+        transition: all 0.3s;
+      }
+      .valve-card.valve-open {
+        border-color: rgba(57, 255, 20, 0.4);
+        box-shadow: 0 0 15px rgba(57, 255, 20, 0.15);
+      }
+      .valve-card.valve-closed {
+        border-color: rgba(255, 61, 61, 0.3);
+      }
+      .valve-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .valve-name {
+        font-family: "Orbitron", monospace;
+        font-size: 0.78rem;
+        color: var(--accent-blue);
+        letter-spacing: 2px;
+      }
+      .valve-badge {
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-family: "Orbitron", monospace;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        transition: all 0.4s;
+      }
+      .valve-badge.open {
+        background: rgba(57, 255, 20, 0.15);
+        border: 1px solid rgba(57, 255, 20, 0.5);
+        color: var(--accent-green);
+        box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+      }
+      .valve-badge.closed {
+        background: rgba(255, 61, 61, 0.12);
+        border: 1px solid rgba(255, 61, 61, 0.4);
+        color: var(--accent-red);
+      }
+      .valve-desc {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        letter-spacing: 0.3px;
+      }
+      .valve-icon-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .valve-icon {
+        font-size: 1.4rem;
+        transition: all 0.4s;
+      }
+      .valve-icon.open {
+        color: var(--accent-green);
+        filter: drop-shadow(0 0 6px var(--accent-green));
+        animation: valveGlow 2s ease-in-out infinite;
+      }
+      .valve-icon.closed {
+        color: var(--accent-red);
+      }
+      @keyframes valveGlow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 4px var(--accent-green));
+        }
+        50% {
+          filter: drop-shadow(0 0 12px var(--accent-green));
+        }
+      }
+
+      /* System alerts */
+      .alert-box {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 212, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px 14px;
+        flex: 1;
+        overflow: hidden;
+      }
+      .alert-title {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .alert-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 180px;
+        overflow-y: auto;
+      }
+      .alert-item {
+        font-size: 0.68rem;
+        padding: 5px 8px;
+        border-radius: 5px;
+        border-left: 2px solid var(--accent-blue);
+        background: rgba(0, 212, 255, 0.05);
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .alert-item.warn {
+        border-color: var(--accent-yellow);
+        background: rgba(255, 215, 0, 0.05);
+        color: var(--accent-yellow);
+      }
+      .alert-item.error {
+        border-color: var(--accent-red);
+        background: rgba(255, 61, 61, 0.06);
+        color: var(--accent-red);
+      }
+      .alert-item.ok {
+        border-color: var(--accent-green);
+        background: rgba(57, 255, 20, 0.05);
+        color: var(--accent-green);
+      }
+      .alert-time {
+        font-family: "Orbitron", monospace;
+        font-size: 0.6rem;
+        opacity: 0.7;
+        flex-shrink: 0;
+      }
+
+      /* WS JSON monitor */
+      .json-monitor {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(0, 212, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      .json-title {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .json-block {
+        font-family: "Orbitron", monospace;
+        font-size: 0.6rem;
+        color: var(--accent-cyan);
+        line-height: 1.8;
+        white-space: pre;
+      }
+      .json-key {
+        color: var(--accent-blue);
+      }
+      .json-val {
+        color: var(--accent-cyan);
+      }
+      .json-str {
+        color: var(--accent-green);
+      }
+
+      /* ===== FOOTER ===== */
+      footer {
+        padding: 10px 32px;
+        border-top: 1px solid rgba(0, 212, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(10, 14, 26, 0.6);
+      }
+      .footer-text {
+        font-size: 0.68rem;
+        color: rgba(138, 180, 204, 0.4);
+        letter-spacing: 2px;
+      }
+      .footer-stats {
+        display: flex;
+        gap: 20px;
+      }
+      .footer-stat {
+        font-family: "Orbitron", monospace;
+        font-size: 0.63rem;
+        color: var(--text-secondary);
+      }
+      .footer-stat span {
+        color: var(--accent-cyan);
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 1100px) {
+        .main-content {
+          grid-template-columns: 280px 1fr;
+          grid-template-rows: auto auto;
+        }
+        .status-panel {
+          grid-column: 1 / 3;
+          grid-row: 2;
+        }
+      }
+      @media (max-width: 720px) {
+        .main-content {
+          grid-template-columns: 1fr;
+          padding: 12px;
+          gap: 12px;
+        }
+        .status-panel {
+          grid-column: 1;
+          grid-row: auto;
+        }
+        .tanks-panel {
+          grid-column: 1;
+        }
+      }
+
+      /* ===== SVG ANIMATIONS ===== */
+      .water-anim {
+        animation: waterWave 3s ease-in-out infinite;
+      }
+      @keyframes waterWave {
+        0%,
+        100% {
+          d: path("M0,0 Q25,-8 50,0 Q75,8 100,0 L100,100 L0,100 Z");
+        }
+        50% {
+          d: path("M0,0 Q25,8 50,0 Q75,-8 100,0 L100,100 L0,100 Z");
+        }
+      }
+      .pipe-flow {
+        stroke-dasharray: 10 8;
+        stroke-dashoffset: 0;
+        animation: flowDash 0.8s linear infinite;
+      }
+      .pipe-flow.stopped {
+        animation-play-state: paused;
+      }
+      @keyframes flowDash {
+        to {
+          stroke-dashoffset: -36;
+        }
+      }
+
+      .bubble {
+        animation: bubbleRise linear infinite;
+        opacity: 0;
+      }
+      @keyframes bubbleRise {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 0;
+        }
+        20% {
+          opacity: 0.6;
+        }
+        80% {
+          opacity: 0.3;
+        }
+        100% {
+          transform: translateY(-60px) scale(1.3);
+          opacity: 0;
+        }
+      }
+
+      .bolt {
+        fill: var(--metal-light);
+        stroke: var(--metal-dark);
+        stroke-width: 1px;
+      }
+
+      /* Glow effects */
+      .tank-glow-blue {
+        filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
+      }
+      .tank-glow-cyan {
+        filter: drop-shadow(0 0 8px rgba(0, 255, 204, 0.4));
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-industrial"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-scanline"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="wrapper">
+      <!-- ===== HEADER ===== -->
+      <header>
+        <div class="header-left">
+          <i class="fas fa-industry logo-icon"></i>
+          <div class="header-title">
+            <h1>HYDRO CONTROL</h1>
+            <p>Industrial Water Management System</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="system-clock" id="sys-clock">00:00:00</div>
+          <div class="header-badge">v2.1.0</div>
+          <div class="header-badge" id="sys-date">--/--/----</div>
+        </div>
+      </header>
+
+      <!-- ===== WS STATUS BAR ===== -->
+      <div class="ws-bar">
+        <div class="ws-status-group">
+          <div class="ws-indicator">
+            <div class="ws-dot" id="ws-dot"></div>
+            <span class="ws-value" id="ws-status-text">DISCONNECTED</span>
+          </div>
+          <div class="ws-indicator">
+            <i
+              class="fas fa-wifi"
+              style="color: var(--text-secondary); font-size: 0.75rem"
+            ></i>
+            <span class="ws-label">TARGET:</span>
+            <span class="ws-value" id="ws-target-display">—</span>
+          </div>
+          <div class="ws-indicator">
+            <i
+              class="fas fa-arrow-up"
+              style="color: var(--accent-green); font-size: 0.7rem"
+            ></i>
+            <span class="ws-label">TX:</span>
+            <span class="ws-value" id="ws-tx-count">0</span>
+          </div>
+          <div class="ws-indicator">
+            <i
+              class="fas fa-arrow-down"
+              style="color: var(--accent-blue); font-size: 0.7rem"
+            ></i>
+            <span class="ws-label">RX:</span>
+            <span class="ws-value" id="ws-rx-count">0</span>
+          </div>
+        </div>
+        <div class="ws-ip-form">
+          <input
+            class="ws-input"
+            id="ws-ip-input"
+            type="text"
+            placeholder="ws://192.168.1.x:81"
+            value="ws://192.168.4.1:81"
+          />
+          <button class="ws-btn" id="ws-connect-btn" onclick="toggleWS()">
+            CONNECT
+          </button>
+        </div>
+        <div class="ws-log" id="ws-log-text">Waiting for connection…</div>
+      </div>
+
+      <!-- ===== MAIN CONTENT ===== -->
+      <main class="main-content">
+        <!-- ── LEFT: CONTROLS ── -->
+        <section class="panel controls-panel">
+          <div class="panel-header">
+            <i class="fas fa-sliders-h panel-icon"></i>
+            <h2>Control Panel</h2>
+          </div>
+          <div class="panel-body">
+            <!-- Slider 1: Min level Tank1 -->
+            <div class="slider-group">
+              <div class="slider-desc">
+                <i class="fas fa-tint" style="color: var(--accent-blue)"></i>
+                TANK 1 — MINIMUM LEVEL THRESHOLD
+              </div>
+              <div class="slider-label">
+                <span>MIN T1</span>
+                <span id="slider1-val">20%</span>
+              </div>
+              <input
+                type="range"
+                class="custom-slider slider-tank1"
+                id="slider-tank1-min"
+                min="0"
+                max="100"
+                value="20"
+                oninput="onSlider1Change(this.value)"
+              />
+              <div class="slider-track">
+                <span>0%</span><span>25%</span><span>50%</span><span>75%</span
+                ><span>100%</span>
+              </div>
+            </div>
+
+            <div class="h-divider"></div>
+
+            <!-- Slider 2: Max level Tank2 -->
+            <div class="slider-group">
+              <div class="slider-desc">
+                <i class="fas fa-tint" style="color: var(--accent-cyan)"></i>
+                TANK 2 — MAXIMUM LEVEL THRESHOLD
+              </div>
+              <div class="slider-label">
+                <span>MAX T2</span>
+                <span id="slider2-val">80%</span>
+              </div>
+              <input
+                type="range"
+                class="custom-slider slider-tank2"
+                id="slider-tank2-max"
+                min="0"
+                max="100"
+                value="80"
+                oninput="onSlider2Change(this.value)"
+              />
+              <div class="slider-track">
+                <span>0%</span><span>25%</span><span>50%</span><span>75%</span
+                ><span>100%</span>
+              </div>
+            </div>
+
+            <div class="h-divider"></div>
+
+            <!-- Refill button -->
+            <button
+              class="btn-refill"
+              id="btn-refill"
+              onclick="triggerRefill()"
+            >
+              <i class="fas fa-fill-drip"></i>
+              REFILL TANK 1
+            </button>
+
+            <div class="h-divider"></div>
+
+            <!-- Live readouts -->
+            <div class="data-readouts">
+              <div class="readout-row">
+                <span class="readout-label"
+                  ><i
+                    class="fas fa-water"
+                    style="color: var(--accent-blue); margin-right: 5px"
+                  ></i>
+                  TANK 1 LEVEL</span
+                >
+                <span
+                  ><span class="readout-value" id="ro-t1">75</span
+                  ><span class="readout-unit">%</span></span
+                >
+              </div>
+              <div class="readout-row">
+                <span class="readout-label"
+                  ><i
+                    class="fas fa-water"
+                    style="color: var(--accent-cyan); margin-right: 5px"
+                  ></i>
+                  TANK 2 LEVEL</span
+                >
+                <span
+                  ><span class="readout-value" id="ro-t2">35</span
+                  ><span class="readout-unit">%</span></span
+                >
+              </div>
+              <div class="readout-row">
+                <span class="readout-label"
+                  ><i
+                    class="fas fa-thermometer-half"
+                    style="color: var(--accent-orange); margin-right: 5px"
+                  ></i>
+                  FLOW RATE</span
+                >
+                <span
+                  ><span class="readout-value" id="ro-flow">0.0</span
+                  ><span class="readout-unit">L/s</span></span
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── CENTER: TANKS SVG ── -->
+        <section class="panel tanks-panel">
+          <div class="panel-header">
+            <i class="fas fa-server panel-icon"></i>
+            <h2>Tank Visualization</h2>
+            <span
+              style="
+                margin-left: auto;
+                font-size: 0.68rem;
+                color: var(--text-secondary);
+                letter-spacing: 1px;
+              "
+              id="sim-status"
+              >● SIMULATION</span
+            >
+          </div>
+          <div class="panel-body">
+            <svg
+              id="tanks-svg"
+              viewBox="0 0 560 520"
+              preserveAspectRatio="xMidYMid meet"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <!-- Water gradients -->
+                <linearGradient id="waterGrad1" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#0a4f7a" />
+                  <stop offset="40%" stop-color="#1a9fdb" />
+                  <stop offset="100%" stop-color="#5dd8ff" stop-opacity="0.8" />
+                </linearGradient>
+                <linearGradient id="waterGrad2" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#0a6f5a" />
+                  <stop offset="40%" stop-color="#1adb9f" />
+                  <stop offset="100%" stop-color="#5dffcc" stop-opacity="0.8" />
+                </linearGradient>
+                <!-- Tank body gradient -->
+                <linearGradient id="tankGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#1e2a3a" />
+                  <stop offset="50%" stop-color="#2d3f55" />
+                  <stop offset="100%" stop-color="#1e2a3a" />
+                </linearGradient>
+                <linearGradient id="tankEdge" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#4a607c" stop-opacity="0.8" />
+                  <stop offset="100%" stop-color="#7a9ab5" stop-opacity="0.4" />
+                </linearGradient>
+                <!-- Pipe gradient -->
+                <linearGradient id="pipeGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#3a5070" />
+                  <stop offset="50%" stop-color="#5a7a9a" />
+                  <stop offset="100%" stop-color="#3a5070" />
+                </linearGradient>
+                <!-- Glow filter -->
+                <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter
+                  id="strongGlow"
+                  x="-50%"
+                  y="-50%"
+                  width="200%"
+                  height="200%"
+                >
+                  <feGaussianBlur stdDeviation="8" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <!-- Clip paths for water -->
+                <clipPath id="clipTank1">
+                  <rect
+                    id="clip1-rect"
+                    x="65"
+                    y="35"
+                    width="150"
+                    height="175"
+                  />
+                </clipPath>
+                <clipPath id="clipTank2">
+                  <rect
+                    id="clip2-rect"
+                    x="340"
+                    y="245"
+                    width="150"
+                    height="210"
+                  />
+                </clipPath>
+                <!-- Metal bolt pattern -->
+                <pattern
+                  id="boltPat"
+                  patternUnits="userSpaceOnUse"
+                  width="30"
+                  height="30"
+                >
+                  <circle
+                    cx="15"
+                    cy="15"
+                    r="3"
+                    fill="#2d3f55"
+                    stroke="#4a607c"
+                    stroke-width="0.8"
+                  />
+                </pattern>
+              </defs>
+
+              <!-- ══════════ BACKGROUND DECORATIONS ══════════ -->
+              <rect x="0" y="0" width="560" height="520" fill="none" />
+              <!-- floor line -->
+              <line
+                x1="30"
+                y1="480"
+                x2="530"
+                y2="480"
+                stroke="#2d3f55"
+                stroke-width="2"
+              />
+              <rect
+                x="30"
+                y="480"
+                width="500"
+                height="6"
+                fill="url(#tankGrad)"
+                rx="2"
+              />
+
+              <!-- ══════════ TANK 1 (upper-left) ══════════ -->
+              <!-- Shadow -->
+              <rect
+                x="62"
+                y="38"
+                width="156"
+                height="181"
+                rx="6"
+                fill="rgba(0,0,0,0.4)"
+              />
+              <!-- Tank body -->
+              <rect
+                x="60"
+                y="35"
+                width="155"
+                height="178"
+                rx="6"
+                fill="url(#tankGrad)"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <!-- Inner highlight -->
+              <rect
+                x="62"
+                y="37"
+                width="151"
+                height="174"
+                rx="5"
+                fill="none"
+                stroke="rgba(255,255,255,0.05)"
+                stroke-width="1"
+              />
+              <!-- Bolt pattern overlay -->
+              <rect
+                x="60"
+                y="35"
+                width="155"
+                height="178"
+                rx="6"
+                fill="url(#boltPat)"
+                opacity="0.3"
+              />
+
+              <!-- Water in Tank1 (clipped) -->
+              <g clip-path="url(#clipTank1)">
+                <!-- Water body -->
+                <rect
+                  id="water1-body"
+                  x="65"
+                  y="140"
+                  width="150"
+                  height="70"
+                  fill="url(#waterGrad1)"
+                />
+                <!-- Animated wave surface -->
+                <path id="wave1" fill="url(#waterGrad1)" opacity="0.9">
+                  <animate
+                    id="wave1-anim"
+                    attributeName="d"
+                    values="M65,140 Q90,130 115,140 Q140,150 165,140 Q190,130 215,140 L215,210 L65,210 Z;
+                          M65,140 Q90,150 115,140 Q140,130 165,140 Q190,150 215,140 L215,210 L65,210 Z;
+                          M65,140 Q90,130 115,140 Q140,150 165,140 Q190,130 215,140 L215,210 L65,210 Z"
+                    dur="3s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <!-- Wave shimmer -->
+                <rect
+                  x="65"
+                  y="35"
+                  width="150"
+                  height="175"
+                  fill="linear-gradient(180deg,rgba(93,216,255,0.15) 0%,transparent 40%)"
+                  opacity="0.4"
+                />
+                <!-- Bubbles in tank1 -->
+                <circle
+                  id="b1a"
+                  cx="90"
+                  cy="200"
+                  r="3"
+                  fill="rgba(93,216,255,0.5)"
+                  class="bubble"
+                  style="animation-duration: 2.1s; animation-delay: 0.3s"
+                />
+                <circle
+                  id="b1b"
+                  cx="120"
+                  cy="195"
+                  r="2"
+                  fill="rgba(93,216,255,0.4)"
+                  class="bubble"
+                  style="animation-duration: 1.8s; animation-delay: 0.9s"
+                />
+                <circle
+                  id="b1c"
+                  cx="155"
+                  cy="205"
+                  r="2.5"
+                  fill="rgba(93,216,255,0.4)"
+                  class="bubble"
+                  style="animation-duration: 2.4s; animation-delay: 0s"
+                />
+              </g>
+              <!-- Tank 1 frame (on top) -->
+              <rect
+                x="60"
+                y="35"
+                width="155"
+                height="178"
+                rx="6"
+                fill="none"
+                stroke="url(#tankEdge)"
+                stroke-width="2"
+              />
+              <!-- Tank 1 top cap -->
+              <rect
+                x="55"
+                y="28"
+                width="165"
+                height="14"
+                rx="4"
+                fill="#2d3f55"
+                stroke="#4a607c"
+                stroke-width="1.2"
+              />
+              <!-- Tank 1 bottom cap -->
+              <rect
+                x="55"
+                y="210"
+                width="165"
+                height="10"
+                rx="3"
+                fill="#2d3f55"
+                stroke="#4a607c"
+                stroke-width="1"
+              />
+              <!-- Corner bolts T1 -->
+              <circle
+                cx="68"
+                cy="45"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <circle
+                cx="207"
+                cy="45"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <circle
+                cx="68"
+                cy="205"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <circle
+                cx="207"
+                cy="205"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+
+              <!-- Tank 1 level gauge (right side) -->
+              <rect
+                x="222"
+                y="35"
+                width="12"
+                height="178"
+                rx="3"
+                fill="#0a1020"
+                stroke="#2d3f55"
+                stroke-width="1"
+              />
+              <rect
+                id="gauge1-fill"
+                x="224"
+                y="140"
+                width="8"
+                height="70"
+                rx="2"
+                fill="url(#waterGrad1)"
+              />
+              <line
+                x1="218"
+                y1="35"
+                x2="226"
+                y2="35"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <line
+                x1="218"
+                y1="80"
+                x2="224"
+                y2="80"
+                stroke="#3a5070"
+                stroke-width="1"
+                opacity="0.6"
+              />
+              <line
+                x1="218"
+                y1="124"
+                x2="224"
+                y2="124"
+                stroke="#3a5070"
+                stroke-width="1"
+                opacity="0.6"
+              />
+              <line
+                x1="218"
+                y1="168"
+                x2="224"
+                y2="168"
+                stroke="#3a5070"
+                stroke-width="1"
+                opacity="0.6"
+              />
+              <line
+                x1="218"
+                y1="213"
+                x2="226"
+                y2="213"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <!-- Min threshold line T1 -->
+              <line
+                id="min-line-t1"
+                x1="60"
+                y1="179"
+                x2="215"
+                y2="179"
+                stroke="var(--accent-yellow)"
+                stroke-width="1.5"
+                stroke-dasharray="6,3"
+                opacity="0.8"
+              />
+
+              <!-- Tank 1 label -->
+              <text
+                x="137"
+                y="20"
+                text-anchor="middle"
+                fill="var(--accent-blue)"
+                font-family="Orbitron,monospace"
+                font-size="9"
+                letter-spacing="2"
+                font-weight="700"
+              >
+                TANK — 01
+              </text>
+              <!-- Level % text T1 -->
+              <text
+                id="t1-pct-text"
+                x="137"
+                y="125"
+                text-anchor="middle"
+                fill="rgba(255,255,255,0.15)"
+                font-family="Orbitron,monospace"
+                font-size="28"
+                font-weight="900"
+              >
+                75%
+              </text>
+              <!-- Min label -->
+              <text
+                id="min-label-t1"
+                x="220"
+                y="178"
+                fill="var(--accent-yellow)"
+                font-size="7"
+                font-family="Orbitron,monospace"
+              >
+                MIN
+              </text>
+
+              <!-- ══════════ SUPPORT STRUCTURE ══════════ -->
+              <!-- T1 legs -->
+              <rect
+                x="80"
+                y="220"
+                width="10"
+                height="50"
+                rx="2"
+                fill="#2d3f55"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+              <rect
+                x="185"
+                y="220"
+                width="10"
+                height="50"
+                rx="2"
+                fill="#2d3f55"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+              <!-- T1 base platform -->
+              <rect
+                x="65"
+                y="268"
+                width="145"
+                height="8"
+                rx="3"
+                fill="#2d3f55"
+                stroke="#4a607c"
+                stroke-width="1"
+              />
+              <!-- Braces -->
+              <line
+                x1="80"
+                y1="268"
+                x2="137"
+                y2="220"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <line
+                x1="195"
+                y1="268"
+                x2="137"
+                y2="220"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+
+              <!-- ══════════ PIPE SYSTEM ══════════ -->
+              <!-- Vertical pipe from T1 bottom -->
+              <rect
+                x="128"
+                y="220"
+                width="18"
+                height="30"
+                fill="url(#pipeGrad)"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+              <!-- Pipe highlight -->
+              <rect
+                x="132"
+                y="220"
+                width="4"
+                height="30"
+                fill="rgba(255,255,255,0.06)"
+              />
+              <!-- Horizontal pipe -->
+              <rect
+                x="128"
+                y="248"
+                width="210"
+                height="18"
+                fill="url(#pipeGrad)"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+              <rect
+                x="128"
+                y="251"
+                width="210"
+                height="4"
+                fill="rgba(255,255,255,0.06)"
+              />
+              <!-- Elbow corner -->
+              <rect
+                x="325"
+                y="248"
+                width="20"
+                height="18"
+                rx="4"
+                fill="#2d3f55"
+                stroke="#4a607c"
+                stroke-width="1"
+              />
+              <!-- Vertical pipe up to T2 -->
+              <rect
+                x="328"
+                y="248"
+                width="18"
+                height="18"
+                fill="url(#pipeGrad)"
+              />
+              <!-- Pipe coupler -->
+              <rect
+                x="125"
+                y="244"
+                width="24"
+                height="6"
+                rx="2"
+                fill="#3a5070"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <rect
+                x="321"
+                y="244"
+                width="24"
+                height="6"
+                rx="2"
+                fill="#3a5070"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <!-- Flow animation -->
+              <line
+                id="flow-line"
+                x1="148"
+                y1="257"
+                x2="328"
+                y2="257"
+                stroke="var(--water-light)"
+                stroke-width="3"
+                stroke-linecap="round"
+                class="pipe-flow"
+                opacity="0.7"
+              />
+
+              <!-- ══════════ VALVE 1 (on horizontal pipe) ══════════ -->
+              <g id="valve1-group" transform="translate(210,245)">
+                <!-- Pipe section behind valve -->
+                <rect
+                  x="-10"
+                  y="3"
+                  width="40"
+                  height="18"
+                  fill="#1e2a3a"
+                  stroke="#3a5070"
+                  stroke-width="1"
+                />
+                <!-- Valve body -->
+                <rect
+                  x="0"
+                  y="0"
+                  width="20"
+                  height="24"
+                  rx="3"
+                  fill="#2d3f55"
+                  stroke="#5a7a9a"
+                  stroke-width="1.5"
+                />
+                <!-- Valve handle -->
+                <rect
+                  id="v1-handle"
+                  x="7"
+                  y="-10"
+                  width="6"
+                  height="12"
+                  rx="2"
+                  fill="#4a607c"
+                  stroke="#7a9ab5"
+                  stroke-width="1"
+                />
+                <rect
+                  id="v1-handle-top"
+                  x="2"
+                  y="-12"
+                  width="16"
+                  height="4"
+                  rx="2"
+                  fill="#5a7a9a"
+                  stroke="#8ab4cc"
+                  stroke-width="1"
+                />
+                <!-- Valve state indicator -->
+                <circle
+                  id="v1-indicator"
+                  cx="10"
+                  cy="12"
+                  r="5"
+                  fill="var(--accent-red)"
+                />
+                <!-- Valve label -->
+                <text
+                  x="10"
+                  y="36"
+                  text-anchor="middle"
+                  fill="var(--text-secondary)"
+                  font-family="Orbitron,monospace"
+                  font-size="7"
+                  letter-spacing="1"
+                >
+                  V1
+                </text>
+              </g>
+
+              <!-- ══════════ TANK 2 (lower-right) ══════════ -->
+              <!-- Shadow -->
+              <rect
+                x="337"
+                y="248"
+                width="156"
+                height="216"
+                rx="6"
+                fill="rgba(0,0,0,0.4)"
+              />
+              <!-- Tank body -->
+              <rect
+                x="335"
+                y="245"
+                width="155"
+                height="213"
+                rx="6"
+                fill="url(#tankGrad)"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <rect
+                x="337"
+                y="247"
+                width="151"
+                height="209"
+                rx="5"
+                fill="none"
+                stroke="rgba(255,255,255,0.05)"
+                stroke-width="1"
+              />
+              <rect
+                x="335"
+                y="245"
+                width="155"
+                height="213"
+                rx="6"
+                fill="url(#boltPat)"
+                opacity="0.3"
+              />
+
+              <!-- Water in Tank2 (clipped) -->
+              <g clip-path="url(#clipTank2)">
+                <rect
+                  id="water2-body"
+                  x="340"
+                  y="385"
+                  width="150"
+                  height="70"
+                  fill="url(#waterGrad2)"
+                />
+                <path id="wave2" fill="url(#waterGrad2)" opacity="0.9">
+                  <animate
+                    id="wave2-anim"
+                    attributeName="d"
+                    values="M340,385 Q365,375 390,385 Q415,395 440,385 Q465,375 490,385 L490,455 L340,455 Z;
+                          M340,385 Q365,395 390,385 Q415,375 440,385 Q465,395 490,385 L490,455 L340,455 Z;
+                          M340,385 Q365,375 390,385 Q415,395 440,385 Q465,375 490,385 L490,455 L340,455 Z"
+                    dur="2.5s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+                <!-- Bubbles in tank2 -->
+                <circle
+                  cx="365"
+                  cy="450"
+                  r="3"
+                  fill="rgba(93,255,204,0.5)"
+                  class="bubble"
+                  style="animation-duration: 2.3s; animation-delay: 0.5s"
+                />
+                <circle
+                  cx="400"
+                  cy="445"
+                  r="2"
+                  fill="rgba(93,255,204,0.4)"
+                  class="bubble"
+                  style="animation-duration: 1.9s; animation-delay: 1.1s"
+                />
+                <circle
+                  cx="440"
+                  cy="448"
+                  r="2.5"
+                  fill="rgba(93,255,204,0.4)"
+                  class="bubble"
+                  style="animation-duration: 2.6s; animation-delay: 0.2s"
+                />
+              </g>
+              <!-- Tank 2 frame -->
+              <rect
+                x="335"
+                y="245"
+                width="155"
+                height="213"
+                rx="6"
+                fill="none"
+                stroke="url(#tankEdge)"
+                stroke-width="2"
+              />
+              <!-- Tank 2 top cap (where pipe enters) -->
+              <rect
+                x="330"
+                y="238"
+                width="165"
+                height="14"
+                rx="4"
+                fill="#2d3f55"
+                stroke="#4a607c"
+                stroke-width="1.2"
+              />
+              <!-- Tank 2 bottom cap -->
+              <rect
+                x="330"
+                y="455"
+                width="165"
+                height="10"
+                rx="3"
+                fill="#2d3f55"
+                stroke="#4a607c"
+                stroke-width="1"
+              />
+              <!-- Corner bolts T2 -->
+              <circle
+                cx="343"
+                cy="255"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <circle
+                cx="482"
+                cy="255"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <circle
+                cx="343"
+                cy="455"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+              <circle
+                cx="482"
+                cy="455"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#5a7a9a"
+                stroke-width="1"
+              />
+
+              <!-- Tank 2 level gauge -->
+              <rect
+                x="497"
+                y="245"
+                width="12"
+                height="213"
+                rx="3"
+                fill="#0a1020"
+                stroke="#2d3f55"
+                stroke-width="1"
+              />
+              <rect
+                id="gauge2-fill"
+                x="499"
+                y="385"
+                width="8"
+                height="70"
+                rx="2"
+                fill="url(#waterGrad2)"
+              />
+              <line
+                x1="493"
+                y1="245"
+                x2="501"
+                y2="245"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <line
+                x1="493"
+                y1="298"
+                x2="499"
+                y2="298"
+                stroke="#3a5070"
+                stroke-width="1"
+                opacity="0.6"
+              />
+              <line
+                x1="493"
+                y1="352"
+                x2="499"
+                y2="352"
+                stroke="#3a5070"
+                stroke-width="1"
+                opacity="0.6"
+              />
+              <line
+                x1="493"
+                y1="405"
+                x2="499"
+                y2="405"
+                stroke="#3a5070"
+                stroke-width="1"
+                opacity="0.6"
+              />
+              <line
+                x1="493"
+                y1="458"
+                x2="501"
+                y2="458"
+                stroke="#3a5070"
+                stroke-width="1.5"
+              />
+              <!-- Max threshold line T2 -->
+              <line
+                id="max-line-t2"
+                x1="335"
+                y1="290"
+                x2="490"
+                y2="290"
+                stroke="var(--accent-orange)"
+                stroke-width="1.5"
+                stroke-dasharray="6,3"
+                opacity="0.8"
+              />
+
+              <!-- Tank 2 label -->
+              <text
+                x="412"
+                y="232"
+                text-anchor="middle"
+                fill="var(--accent-cyan)"
+                font-family="Orbitron,monospace"
+                font-size="9"
+                letter-spacing="2"
+                font-weight="700"
+              >
+                TANK — 02
+              </text>
+              <text
+                id="t2-pct-text"
+                x="412"
+                y="360"
+                text-anchor="middle"
+                fill="rgba(255,255,255,0.12)"
+                font-family="Orbitron,monospace"
+                font-size="28"
+                font-weight="900"
+              >
+                35%
+              </text>
+              <!-- Max label -->
+              <text
+                id="max-label-t2"
+                x="495"
+                y="289"
+                fill="var(--accent-orange)"
+                font-size="7"
+                font-family="Orbitron,monospace"
+              >
+                MAX
+              </text>
+
+              <!-- ══════════ VALVE 2 (drain, on T2 bottom) ══════════ -->
+              <!-- Drain pipe from T2 bottom -->
+              <rect
+                x="398"
+                y="465"
+                width="18"
+                height="15"
+                fill="url(#pipeGrad)"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+              <g id="valve2-group" transform="translate(396,478)">
+                <rect
+                  x="0"
+                  y="0"
+                  width="22"
+                  height="20"
+                  rx="3"
+                  fill="#2d3f55"
+                  stroke="#5a7a9a"
+                  stroke-width="1.5"
+                />
+                <rect
+                  id="v2-handle"
+                  x="8"
+                  y="-10"
+                  width="6"
+                  height="12"
+                  rx="2"
+                  fill="#4a607c"
+                  stroke="#7a9ab5"
+                  stroke-width="1"
+                />
+                <rect
+                  id="v2-handle-top"
+                  x="3"
+                  y="-12"
+                  width="16"
+                  height="4"
+                  rx="2"
+                  fill="#5a7a9a"
+                  stroke="#8ab4cc"
+                  stroke-width="1"
+                />
+                <circle
+                  id="v2-indicator"
+                  cx="11"
+                  cy="10"
+                  r="5"
+                  fill="var(--accent-red)"
+                />
+                <text
+                  x="11"
+                  y="30"
+                  text-anchor="middle"
+                  fill="var(--text-secondary)"
+                  font-family="Orbitron,monospace"
+                  font-size="7"
+                  letter-spacing="1"
+                >
+                  V2
+                </text>
+              </g>
+              <!-- Drain flow out -->
+              <rect
+                id="drain-pipe"
+                x="398"
+                y="498"
+                width="18"
+                height="25"
+                fill="url(#pipeGrad)"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+              <path
+                id="drain-drops"
+                d=""
+                fill="var(--water-light)"
+                opacity="0"
+              />
+              <!-- Drain exit -->
+              <path
+                d="M395,523 L422,523 L425,530 L392,530 Z"
+                fill="#2d3f55"
+                stroke="#3a5070"
+                stroke-width="1"
+              />
+
+              <!-- ══════════ PIPE ENTRY INDICATOR ══════════ -->
+              <!-- Entry point at T2 top -->
+              <circle
+                cx="337"
+                cy="257"
+                r="5"
+                fill="none"
+                stroke="var(--accent-blue)"
+                stroke-width="1.5"
+                opacity="0.6"
+              />
+              <!-- Drip animation into T2 -->
+              <circle
+                id="drip1"
+                cx="337"
+                cy="257"
+                r="3"
+                fill="var(--water-light)"
+                opacity="0"
+              >
+                <animate
+                  attributeName="cy"
+                  values="257;385"
+                  dur="0.7s"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="opacity"
+                  values="0;0.8;0"
+                  dur="0.7s"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="r"
+                  values="3;2;1"
+                  dur="0.7s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+
+              <!-- ══════════ DECORATIVE ELEMENTS ══════════ -->
+              <!-- Pipe joints -->
+              <circle
+                cx="128"
+                cy="257"
+                r="8"
+                fill="#2d3f55"
+                stroke="#5a7a9a"
+                stroke-width="1.5"
+              />
+              <circle
+                cx="128"
+                cy="257"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#4a607c"
+                stroke-width="1"
+              />
+              <circle
+                cx="337"
+                cy="257"
+                r="8"
+                fill="#2d3f55"
+                stroke="#5a7a9a"
+                stroke-width="1.5"
+              />
+              <circle
+                cx="337"
+                cy="257"
+                r="4"
+                fill="#1e2a3a"
+                stroke="#4a607c"
+                stroke-width="1"
+              />
+
+              <!-- Pressure gauges -->
+              <!-- Gauge on T1 left -->
+              <g transform="translate(40,100)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="14"
+                  fill="#1e2a3a"
+                  stroke="#4a607c"
+                  stroke-width="1.5"
+                />
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="11"
+                  fill="#0a1020"
+                  stroke="#2d3f55"
+                  stroke-width="1"
+                />
+                <text
+                  x="0"
+                  y="4"
+                  text-anchor="middle"
+                  fill="var(--text-secondary)"
+                  font-size="6"
+                  font-family="Orbitron,monospace"
+                >
+                  PSI
+                </text>
+                <line
+                  id="gauge1-needle"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="-8"
+                  stroke="var(--accent-red)"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <circle cx="0" cy="0" r="2" fill="#4a607c" />
+                <!-- Pipe connecting to tank -->
+                <rect
+                  x="12"
+                  y="-3"
+                  width="12"
+                  height="6"
+                  fill="#2d3f55"
+                  stroke="#3a5070"
+                  stroke-width="0.8"
+                />
+              </g>
+              <!-- Gauge on T2 right side (moved left to fit) -->
+              <g transform="translate(520,370)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="14"
+                  fill="#1e2a3a"
+                  stroke="#4a607c"
+                  stroke-width="1.5"
+                />
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="11"
+                  fill="#0a1020"
+                  stroke="#2d3f55"
+                  stroke-width="1"
+                />
+                <text
+                  x="0"
+                  y="4"
+                  text-anchor="middle"
+                  fill="var(--text-secondary)"
+                  font-size="6"
+                  font-family="Orbitron,monospace"
+                >
+                  PSI
+                </text>
+                <line
+                  id="gauge2-needle"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="-8"
+                  stroke="var(--accent-red)"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <circle cx="0" cy="0" r="2" fill="#4a607c" />
+                <rect
+                  x="-24"
+                  y="-3"
+                  width="12"
+                  height="6"
+                  fill="#2d3f55"
+                  stroke="#3a5070"
+                  stroke-width="0.8"
+                />
+              </g>
+
+              <!-- Weld marks on pipes -->
+              <rect
+                x="165"
+                y="244"
+                width="6"
+                height="26"
+                rx="1"
+                fill="#3a5070"
+                opacity="0.5"
+              />
+              <rect
+                x="270"
+                y="244"
+                width="6"
+                height="26"
+                rx="1"
+                fill="#3a5070"
+                opacity="0.5"
+              />
+
+              <!-- Label overlays -->
+              <rect
+                x="178"
+                y="270"
+                width="60"
+                height="16"
+                rx="3"
+                fill="rgba(0,0,0,0.5)"
+                stroke="rgba(0,212,255,0.2)"
+                stroke-width="0.5"
+              />
+              <text
+                x="208"
+                y="281"
+                text-anchor="middle"
+                fill="var(--text-secondary)"
+                font-size="7"
+                font-family="Orbitron,monospace"
+                letter-spacing="1"
+              >
+                SUPPLY LINE
+              </text>
+            </svg>
+          </div>
+        </section>
+
+        <!-- ── RIGHT: STATUS ── -->
+        <section class="panel status-panel">
+          <div class="panel-header">
+            <i class="fas fa-broadcast-tower panel-icon"></i>
+            <h2>System Status</h2>
+          </div>
+          <div class="panel-body">
+            <!-- Valve 1 status card -->
+            <div class="valve-card valve-closed" id="valve1-card">
+              <div class="valve-card-header">
+                <span class="valve-name">VALVE — 01</span>
+                <span class="valve-badge closed" id="v1-badge">CLOSED</span>
+              </div>
+              <div class="valve-icon-row">
+                <i class="fas fa-faucet valve-icon closed" id="v1-icon"></i>
+                <span class="valve-desc"
+                  >T1 → T2 Transfer<br />Supply Control Valve</span
+                >
+              </div>
+              <div class="valve-desc" id="v1-desc">
+                Prevents flow from Tank 1 to Tank 2.
+              </div>
+            </div>
+
+            <!-- Valve 2 status card -->
+            <div class="valve-card valve-closed" id="valve2-card">
+              <div class="valve-card-header">
+                <span class="valve-name">VALVE — 02</span>
+                <span class="valve-badge closed" id="v2-badge">CLOSED</span>
+              </div>
+              <div class="valve-icon-row">
+                <i class="fas fa-faucet valve-icon closed" id="v2-icon"></i>
+                <span class="valve-desc"
+                  >T2 Drain Valve<br />Discharge Control</span
+                >
+              </div>
+              <div class="valve-desc" id="v2-desc">Tank 2 drain is sealed.</div>
+            </div>
+
+            <!-- JSON Monitor -->
+            <div class="json-monitor">
+              <div class="json-title">
+                <i class="fas fa-code" style="color: var(--accent-blue)"></i>
+                LAST JSON PAYLOAD
+              </div>
+              <div class="json-block" id="json-display">
+                <span class="json-key">{</span>
+                <span class="json-key">"t1_level"</span>:
+                <span class="json-val">75</span>,
+                <span class="json-key">"t2_level"</span>:
+                <span class="json-val">35</span>,
+                <span class="json-key">"min_t1"</span>:
+                <span class="json-val">20</span>,
+                <span class="json-key">"max_t2"</span>:
+                <span class="json-val">80</span> <span class="json-key">}</span>
+              </div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="alert-box">
+              <div class="alert-title">
+                <i class="fas fa-bell" style="color: var(--accent-yellow)"></i>
+                SYSTEM ALERTS
+              </div>
+              <div class="alert-list" id="alert-list">
+                <div class="alert-item ok">
+                  <span class="alert-time">BOOT</span> System initialized.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- ===== FOOTER ===== -->
+      <footer>
+        <div class="footer-text">
+          © 2025 HYDRO CONTROL — INDUSTRIAL AUTOMATION
+        </div>
+        <div class="footer-stats">
+          <div class="footer-stat">
+            UPTIME: <span id="uptime-val">00:00:00</span>
+          </div>
+          <div class="footer-stat">CYCLE: <span id="cycle-val">0</span></div>
+          <div class="footer-stat">
+            WS MSG: <span id="footer-ws-msg">0</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      /* ═══════════════════════════════════════════════════════════════
+     HYDRO CONTROL DASHBOARD — FULL JAVASCRIPT
+     Handles: Animation, Simulation, WebSocket, JSON, UI
+  ═══════════════════════════════════════════════════════════════ */
+
+      // ── State ──────────────────────────────────────────────────────
+      const state = {
+        tank1: 75, // current level 0-100
+        tank2: 35,
+        minTank1: 20, // slider values
+        maxTank2: 80,
+        valve1Open: false,
+        valve2Open: false,
+        refilling: false,
+        flowRate: 0,
+        txCount: 0,
+        rxCount: 0,
+        totalMsg: 0,
+        uptime: 0,
+        cycle: 0,
+        wsConnected: false,
+        ws: null,
+      };
+
+      // Tank SVG geometry constants
+      const T1 = { top: 35, bottom: 213, height: 178 }; // y coords in SVG
+      const T2 = { top: 245, bottom: 458, height: 213 };
+
+      // ── Particles ─────────────────────────────────────────────────
+      (function createParticles() {
+        const container = document.getElementById("particles");
+        for (let i = 0; i < 30; i++) {
+          const p = document.createElement("div");
+          p.className = "particle";
+          p.style.left = Math.random() * 100 + "vw";
+          p.style.animationDuration = 6 + Math.random() * 14 + "s";
+          p.style.animationDelay = Math.random() * 12 + "s";
+          p.style.width = p.style.height = 1 + Math.random() * 2 + "px";
+          p.style.opacity = 0;
+          if (Math.random() > 0.5) p.style.background = "#00ffcc";
+          container.appendChild(p);
+        }
+      })();
+
+      // ── Clock ──────────────────────────────────────────────────────
+      function updateClock() {
+        const now = new Date();
+        document.getElementById("sys-clock").textContent =
+          now.toLocaleTimeString("en-GB", { hour12: false });
+        document.getElementById("sys-date").textContent =
+          now.toLocaleDateString("en-GB");
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // Uptime counter
+      const startTime = Date.now();
+      function updateUptime() {
+        state.uptime = Math.floor((Date.now() - startTime) / 1000);
+        const h = Math.floor(state.uptime / 3600)
+          .toString()
+          .padStart(2, "0");
+        const m = Math.floor((state.uptime % 3600) / 60)
+          .toString()
+          .padStart(2, "0");
+        const s = (state.uptime % 60).toString().padStart(2, "0");
+        document.getElementById("uptime-val").textContent = `${h}:${m}:${s}`;
+      }
+      setInterval(updateUptime, 1000);
+
+      // ── SVG helpers ────────────────────────────────────────────────
+      function setTankLevel1(pct) {
+        // pct = 0-100
+        const h = (pct / 100) * T1.height;
+        const waterY = T1.bottom - h;
+        // Clip rect
+        document.getElementById("clip1-rect").setAttribute("y", waterY);
+        document.getElementById("clip1-rect").setAttribute("height", h);
+        // Water body (backup behind wave)
+        document.getElementById("water1-body").setAttribute("y", waterY);
+        document.getElementById("water1-body").setAttribute("height", h);
+        // Gauge fill
+        const gaugeH = (pct / 100) * T1.height;
+        const gaugeY = T1.bottom - gaugeH;
+        document.getElementById("gauge1-fill").setAttribute("y", gaugeY);
+        document.getElementById("gauge1-fill").setAttribute("height", gaugeH);
+        // Wave animation (update values dynamically)
+        updateWave1(waterY, pct);
+        // Percentage text
+        document.getElementById("t1-pct-text").textContent =
+          Math.round(pct) + "%";
+        const textY = Math.max(waterY + 40, T1.top + 40);
+        document
+          .getElementById("t1-pct-text")
+          .setAttribute("y", Math.min(textY, T1.bottom - 10));
+        // Pressure gauge needle
+        const angle = -130 + (pct / 100) * 260;
+        document
+          .getElementById("gauge1-needle")
+          .setAttribute("transform", `rotate(${angle})`);
+      }
+
+      function setTankLevel2(pct) {
+        const h = (pct / 100) * T2.height;
+        const waterY = T2.bottom - h;
+        document.getElementById("clip2-rect").setAttribute("y", waterY);
+        document.getElementById("clip2-rect").setAttribute("height", h);
+        document.getElementById("water2-body").setAttribute("y", waterY);
+        document.getElementById("water2-body").setAttribute("height", h);
+        const gaugeH = (pct / 100) * T2.height;
+        const gaugeY = T2.bottom - gaugeH;
+        document.getElementById("gauge2-fill").setAttribute("y", gaugeY);
+        document.getElementById("gauge2-fill").setAttribute("height", gaugeH);
+        updateWave2(waterY, pct);
+        document.getElementById("t2-pct-text").textContent =
+          Math.round(pct) + "%";
+        const textY2 = Math.max(waterY + 40, T2.top + 50);
+        document
+          .getElementById("t2-pct-text")
+          .setAttribute("y", Math.min(textY2, T2.bottom - 15));
+        const angle2 = -130 + (pct / 100) * 260;
+        document
+          .getElementById("gauge2-needle")
+          .setAttribute("transform", `rotate(${angle2})`);
+      }
+
+      function updateWave1(waterY, pct) {
+        if (pct <= 1) return;
+        const b = T1.bottom;
+        const x1 = 65;
+        const x2 = 215;
+        const mid = (x1 + x2) / 2;
+        const vals = [
+          `M${x1},${waterY} Q${mid - 25},${waterY - 10} ${mid},${waterY} Q${mid + 25},${waterY + 10} ${x2},${waterY} L${x2},${b} L${x1},${b} Z`,
+          `M${x1},${waterY} Q${mid - 25},${waterY + 10} ${mid},${waterY} Q${mid + 25},${waterY - 10} ${x2},${waterY} L${x2},${b} L${x1},${b} Z`,
+          `M${x1},${waterY} Q${mid - 25},${waterY - 10} ${mid},${waterY} Q${mid + 25},${waterY + 10} ${x2},${waterY} L${x2},${b} L${x1},${b} Z`,
+        ].join(";");
+        document.getElementById("wave1-anim").setAttribute("values", vals);
+      }
+
+      function updateWave2(waterY, pct) {
+        if (pct <= 1) return;
+        const b = T2.bottom;
+        const x1 = 340;
+        const x2 = 490;
+        const mid = (x1 + x2) / 2;
+        const vals = [
+          `M${x1},${waterY} Q${mid - 25},${waterY - 10} ${mid},${waterY} Q${mid + 25},${waterY + 10} ${x2},${waterY} L${x2},${b} L${x1},${b} Z`,
+          `M${x1},${waterY} Q${mid - 25},${waterY + 10} ${mid},${waterY} Q${mid + 25},${waterY - 10} ${x2},${waterY} L${x2},${b} L${x1},${b} Z`,
+          `M${x1},${waterY} Q${mid - 25},${waterY - 10} ${mid},${waterY} Q${mid + 25},${waterY + 10} ${x2},${waterY} L${x2},${b} L${x1},${b} Z`,
+        ].join(";");
+        document.getElementById("wave2-anim").setAttribute("values", vals);
+      }
+
+      function setMinLineT1(pct) {
+        const y = T1.bottom - (pct / 100) * T1.height;
+        document.getElementById("min-line-t1").setAttribute("y1", y);
+        document.getElementById("min-line-t1").setAttribute("y2", y);
+        document.getElementById("min-label-t1").setAttribute("y", y - 1);
+      }
+
+      function setMaxLineT2(pct) {
+        const y = T2.bottom - (pct / 100) * T2.height;
+        document.getElementById("max-line-t2").setAttribute("y1", y);
+        document.getElementById("max-line-t2").setAttribute("y2", y);
+        document.getElementById("max-label-t2").setAttribute("y", y - 1);
+      }
+
+      // ── Valve visual updates ────────────────────────────────────────
+      function setValve1Visual(open) {
+        const ind = document.getElementById("v1-indicator");
+        const fl = document.getElementById("flow-line");
+        const handle = document.getElementById("v1-handle");
+        const card = document.getElementById("valve1-card");
+        const badge = document.getElementById("v1-badge");
+        const icon = document.getElementById("v1-icon");
+        const desc = document.getElementById("v1-desc");
+
+        if (open) {
+          ind.setAttribute("fill", "var(--accent-green)");
+          fl.classList.remove("stopped");
+          handle.setAttribute("transform", "rotate(90,10,0)");
+          card.className = "valve-card valve-open";
+          badge.className = "valve-badge open";
+          badge.textContent = "OPEN";
+          icon.className = "fas fa-faucet valve-icon open";
+          desc.textContent = "Flowing water from Tank 1 → Tank 2.";
+        } else {
+          ind.setAttribute("fill", "var(--accent-red)");
+          fl.classList.add("stopped");
+          handle.removeAttribute("transform");
+          card.className = "valve-card valve-closed";
+          badge.className = "valve-badge closed";
+          badge.textContent = "CLOSED";
+          icon.className = "fas fa-faucet valve-icon closed";
+          desc.textContent = "Prevents flow from Tank 1 to Tank 2.";
+        }
+      }
+
+      function setValve2Visual(open) {
+        const ind = document.getElementById("v2-indicator");
+        const card = document.getElementById("valve2-card");
+        const badge = document.getElementById("v2-badge");
+        const icon = document.getElementById("v2-icon");
+        const desc = document.getElementById("v2-desc");
+        const drip = document.getElementById("drain-drops");
+
+        if (open) {
+          ind.setAttribute("fill", "var(--accent-green)");
+          card.className = "valve-card valve-open";
+          badge.className = "valve-badge open";
+          badge.textContent = "OPEN";
+          icon.className = "fas fa-faucet valve-icon open";
+          desc.textContent = "Draining Tank 2 — discharge active.";
+          // show drain flow
+          drip.setAttribute("opacity", "0.7");
+        } else {
+          ind.setAttribute("fill", "var(--accent-red)");
+          card.className = "valve-card valve-closed";
+          badge.className = "valve-badge closed";
+          badge.textContent = "CLOSED";
+          icon.className = "fas fa-faucet valve-icon closed";
+          desc.textContent = "Tank 2 drain is sealed.";
+          drip.setAttribute("opacity", "0");
+        }
+      }
+
+      // ── Readout updates ─────────────────────────────────────────────
+      function updateReadouts() {
+        document.getElementById("ro-t1").textContent = Math.round(state.tank1);
+        document.getElementById("ro-t2").textContent = Math.round(state.tank2);
+        document.getElementById("ro-flow").textContent =
+          state.flowRate.toFixed(1);
+      }
+
+      // ── JSON display ────────────────────────────────────────────────
+      function renderJSONDisplay() {
+        const payload = buildSendPayload();
+        document.getElementById("json-display").innerHTML =
+          `<span class="json-key">{</span>\n` +
+          `  <span class="json-key">"t1_level"</span>: <span class="json-val">${payload.t1_level}</span>,\n` +
+          `  <span class="json-key">"t2_level"</span>: <span class="json-val">${payload.t2_level}</span>,\n` +
+          `  <span class="json-key">"min_t1"</span>:   <span class="json-val">${payload.min_t1}</span>,\n` +
+          `  <span class="json-key">"max_t2"</span>:   <span class="json-val">${payload.max_t2}</span>\n` +
+          `<span class="json-key">}</span>`;
+      }
+
+      // ── Alert system ────────────────────────────────────────────────
+      function addAlert(msg, type = "info") {
+        const list = document.getElementById("alert-list");
+        const now = new Date().toLocaleTimeString("en-GB", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        const item = document.createElement("div");
+        item.className = `alert-item ${type}`;
+        const iconMap = { info: "", warn: "⚠", error: "✖", ok: "✔" };
+        item.innerHTML = `<span class="alert-time">${now}</span> ${iconMap[type] || ""} ${msg}`;
+        list.insertBefore(item, list.firstChild);
+        // Keep max 12 alerts
+        while (list.children.length > 12) list.removeChild(list.lastChild);
+      }
+
+      // ── Slider callbacks ────────────────────────────────────────────
+      function onSlider1Change(val) {
+        state.minTank1 = parseInt(val);
+        document.getElementById("slider1-val").textContent = val + "%";
+        setMinLineT1(state.minTank1);
+        renderJSONDisplay();
+        scheduleSend();
+      }
+
+      function onSlider2Change(val) {
+        state.maxTank2 = parseInt(val);
+        document.getElementById("slider2-val").textContent = val + "%";
+        setMaxLineT2(state.maxTank2);
+        renderJSONDisplay();
+        scheduleSend();
+      }
+
+      // ── Refill button ───────────────────────────────────────────────
+      function triggerRefill() {
+        if (state.refilling) return;
+        state.refilling = true;
+        const btn = document.getElementById("btn-refill");
+        btn.classList.add("active");
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> REFILLING…';
+        addAlert("Refill Tank 1 triggered by operator.", "ok");
+        // Simulate refill: increase tank1 over time
+        const refillInterval = setInterval(() => {
+          state.tank1 = Math.min(state.tank1 + 2, 95);
+          setTankLevel1(state.tank1);
+          updateReadouts();
+          renderJSONDisplay();
+          if (state.tank1 >= 95 || state.tank1 >= 100) {
+            clearInterval(refillInterval);
+            state.refilling = false;
+            btn.classList.remove("active");
+            btn.innerHTML = '<i class="fas fa-fill-drip"></i> REFILL TANK 1';
+            addAlert("Tank 1 refill complete.", "ok");
+            scheduleSend();
+          }
+        }, 80);
+      }
+
+      // ── Simulation loop ────────────────────────────────────────────
+      let lastSimTime = Date.now();
+      function simulationStep() {
+        const now = Date.now();
+        const dt = (now - lastSimTime) / 1000; // seconds
+        lastSimTime = now;
+        state.cycle++;
+        document.getElementById("cycle-val").textContent = state.cycle;
+
+        // If valve1 open: flow from tank1 to tank2
+        if (state.valve1Open) {
+          const flow = 3.0; // units/sec
+          state.flowRate = flow;
+          if (!state.refilling) {
+            state.tank1 = Math.max(0, state.tank1 - flow * dt);
+            state.tank2 = Math.min(100, state.tank2 + flow * dt);
+          }
+        } else {
+          state.flowRate = 0;
+        }
+
+        // If valve2 open: drain tank2
+        if (state.valve2Open && !state.refilling) {
+          const drain = 2.0;
+          state.tank2 = Math.max(0, state.tank2 - drain * dt);
+        }
+
+        // Auto-logic simulation (when not connected to real Wemos)
+        if (!state.wsConnected) {
+          // Auto-open valve1 if tank2 below max and tank1 above min
+          const shouldOpen1 =
+            state.tank2 < state.maxTank2 && state.tank1 > state.minTank1;
+          if (shouldOpen1 !== state.valve1Open) {
+            state.valve1Open = shouldOpen1;
+            setValve1Visual(state.valve1Open);
+            addAlert(
+              state.valve1Open
+                ? "Valve 1 AUTO-OPEN (simulation)."
+                : "Valve 1 AUTO-CLOSE (simulation).",
+              state.valve1Open ? "ok" : "warn",
+            );
+          }
+        }
+
+        // Warn if below/above thresholds
+        if (
+          state.tank1 <= state.minTank1 + 2 &&
+          state.tank1 > 0 &&
+          state.cycle % 300 === 0
+        ) {
+          addAlert("Tank 1 near minimum threshold!", "warn");
+        }
+        if (state.tank2 >= state.maxTank2 - 2 && state.cycle % 300 === 0) {
+          addAlert("Tank 2 near maximum threshold!", "warn");
+        }
+        if (state.tank1 <= 0 && state.cycle % 150 === 0) {
+          addAlert("Tank 1 EMPTY — pump required!", "error");
+        }
+
+        setTankLevel1(state.tank1);
+        setTankLevel2(state.tank2);
+        setValve1Visual(state.valve1Open);
+        setValve2Visual(state.valve2Open);
+        updateReadouts();
+        renderJSONDisplay();
+      }
+      setInterval(simulationStep, 50); // ~20fps
+
+      // ── WebSocket ──────────────────────────────────────────────────
+      let sendTimer = null;
+      function scheduleSend() {
+        clearTimeout(sendTimer);
+        sendTimer = setTimeout(sendData, 200);
+      }
+
+      function buildSendPayload() {
+        return {
+          t1_level: Math.round(state.tank1),
+          t2_level: Math.round(state.tank2),
+          min_t1: state.minTank1,
+          max_t2: state.maxTank2,
+        };
+      }
+
+      function sendData() {
+        if (!state.ws || state.ws.readyState !== WebSocket.OPEN) return;
+        const payload = JSON.stringify(buildSendPayload());
+        state.ws.send(payload);
+        state.txCount++;
+        state.totalMsg++;
+        document.getElementById("ws-tx-count").textContent = state.txCount;
+        document.getElementById("footer-ws-msg").textContent = state.totalMsg;
+      }
+
+      // Periodic send every 500ms when connected
+      setInterval(() => {
+        if (state.wsConnected) sendData();
+      }, 500);
+
+      function setWSStatus(status) {
+        const dot = document.getElementById("ws-dot");
+        const txt = document.getElementById("ws-status-text");
+        const btn = document.getElementById("ws-connect-btn");
+        if (status === "connected") {
+          dot.className = "ws-dot connected";
+          txt.textContent = "CONNECTED";
+          txt.style.color = "var(--accent-green)";
+          btn.className = "ws-btn disconnect";
+          btn.textContent = "DISCONNECT";
+          state.wsConnected = true;
+          document.getElementById("sim-status").textContent = "● LIVE";
+          document.getElementById("sim-status").style.color =
+            "var(--accent-green)";
+        } else if (status === "connecting") {
+          dot.className = "ws-dot connecting";
+          txt.textContent = "CONNECTING…";
+          txt.style.color = "var(--accent-yellow)";
+          btn.className = "ws-btn";
+          btn.textContent = "CANCEL";
+        } else {
+          dot.className = "ws-dot";
+          txt.textContent = "DISCONNECTED";
+          txt.style.color = "var(--accent-red)";
+          btn.className = "ws-btn";
+          btn.textContent = "CONNECT";
+          state.wsConnected = false;
+          document.getElementById("sim-status").textContent = "● SIMULATION";
+          document.getElementById("sim-status").style.color =
+            "var(--text-secondary)";
+        }
+      }
+
+      function setWSLog(msg) {
+        document.getElementById("ws-log-text").textContent = msg;
+        document.getElementById("ws-target-display").textContent = state.ws
+          ? new URL(state.ws.url).host
+          : "—";
+      }
+
+      function toggleWS() {
+        if (
+          state.ws &&
+          (state.ws.readyState === WebSocket.OPEN ||
+            state.ws.readyState === WebSocket.CONNECTING)
+        ) {
+          state.ws.close();
+          return;
+        }
+        const url = document.getElementById("ws-ip-input").value.trim();
+        if (!url) {
+          addAlert("Enter a valid WebSocket URL.", "error");
+          return;
+        }
+
+        setWSStatus("connecting");
+        setWSLog("Connecting to " + url + "…");
+        addAlert("Attempting WebSocket connection to " + url, "info");
+
+        try {
+          state.ws = new WebSocket(url);
+        } catch (e) {
+          setWSStatus("disconnected");
+          addAlert("Invalid WebSocket URL: " + e.message, "error");
+          return;
+        }
+
+        state.ws.onopen = () => {
+          setWSStatus("connected");
+          setWSLog("Connected to " + url);
+          addAlert("WebSocket connected! Live data active.", "ok");
+          document.getElementById("ws-target-display").textContent = url;
+          sendData();
+        };
+
+        state.ws.onmessage = (evt) => {
+          state.rxCount++;
+          state.totalMsg++;
+          document.getElementById("ws-rx-count").textContent = state.rxCount;
+          document.getElementById("footer-ws-msg").textContent = state.totalMsg;
+          try {
+            const data = JSON.parse(evt.data);
+            handleWemosData(data);
+            setWSLog("RX: " + evt.data.substring(0, 80));
+          } catch (e) {
+            addAlert(
+              "Invalid JSON from Wemos: " + evt.data.substring(0, 40),
+              "warn",
+            );
+          }
+        };
+
+        state.ws.onerror = (e) => {
+          addAlert("WebSocket error — check Wemos IP/port.", "error");
+        };
+
+        state.ws.onclose = (evt) => {
+          setWSStatus("disconnected");
+          setWSLog("Connection closed. Code: " + evt.code);
+          addAlert("WebSocket disconnected. Code: " + evt.code, "warn");
+        };
+      }
+
+      /**
+       * Handle data received from Wemos:
+       * Expected JSON:
+       * { "valve1": "open"|"close", "valve2": "open"|"close" }
+       */
+      function handleWemosData(data) {
+        let changed = false;
+
+        if (data.valve1 !== undefined) {
+          const open =
+            data.valve1 === "open" || data.valve1 === true || data.valve1 === 1;
+          if (open !== state.valve1Open) {
+            state.valve1Open = open;
+            setValve1Visual(open);
+            addAlert(
+              `Wemos → Valve 1 ${open ? "OPENED" : "CLOSED"}.`,
+              open ? "ok" : "info",
+            );
+            changed = true;
+          }
+        }
+
+        if (data.valve2 !== undefined) {
+          const open =
+            data.valve2 === "open" || data.valve2 === true || data.valve2 === 1;
+          if (open !== state.valve2Open) {
+            state.valve2Open = open;
+            setValve2Visual(open);
+            addAlert(
+              `Wemos → Valve 2 ${open ? "OPENED" : "CLOSED"}.`,
+              open ? "ok" : "info",
+            );
+            changed = true;
+          }
+        }
+
+        // Update JSON display for received data
+        if (changed) renderJSONDisplay();
+      }
+
+      // ── Initial render ──────────────────────────────────────────────
+      setTankLevel1(state.tank1);
+      setTankLevel2(state.tank2);
+      setMinLineT1(state.minTank1);
+      setMaxLineT2(state.maxTank2);
+      setValve1Visual(false);
+      setValve2Visual(false);
+      updateReadouts();
+      renderJSONDisplay();
+
+      // Initial slider display
+      document.getElementById("slider1-val").textContent = state.minTank1 + "%";
+      document.getElementById("slider2-val").textContent = state.maxTank2 + "%";
+
+      addAlert("Dashboard loaded. Simulation mode active.", "ok");
+      addAlert("Enter Wemos IP and click CONNECT.", "info");
+    </script>
+  </body>
+</html>
