@@ -1,15 +1,11 @@
 #include <ESP8266WiFi.h>
 #include <WebSocketsServer.h>
-#include <DHT.h>
 #include <ArduinoJson.h>
 
-// إعدادات الحساس والاتصال
-// DHT dht(2, DHT22);
-// const char* ssid     = "netis_AC2414";
-// const char* password = "password";
 
-const char* ssid     = "shwehdi4g";
-const char* password = "Libya(*)42311";
+
+const char* ssid     = "--------";
+const char* password = "-----------";
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 // float HUM = 0, TEMP = 0;
@@ -40,7 +36,6 @@ void Pin_chack(){
 
 void setup() {
   Serial.begin(115200);
-//   dht.begin();
  delay(2000);
   pinMode(valve1pin,INPUT_PULLUP);
   pinMode(valve2pin,INPUT_PULLUP);
