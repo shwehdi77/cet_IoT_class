@@ -2,97 +2,49 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard - Wemos D1 Mini</title>
     <style>
-      /* 1. إعدادات الصفحة الأساسية لتشغل كامل مساحة الشاشة */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body,
       html {
-        margin: 0; /* إلغاء الهوامش لضمان عدم وجود فراغات بيضاء حول الصفحة */
-        padding: 0;
-        height: 100%; /* جعل الصفحة تمتد على كامل طول الشاشة */
+        height: 100%;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        display: flex; /* تفعيل نظام Flexbox لتوزيع العناصر */
-        flex-direction: column; /* ترتيب الصفوف (العنوان ثم البيانات) بشكل رأسي */
-      }
-
-      /* 2. تنسيق الصف العلوي (Header) - يمثل ثلث الشاشة */
-      .top-row {
-        flex: 1; /* تحديد مساحة الثلث من إجمالي مساحة الشاشة */
-        background-color: #f8f9fa;
         display: flex;
-        /* row-reverse: هي الخاصية التي جعلت الصورة تظهر أولاً من اليمين والنص يتبعها من اليسار */
-        flex-direction: row-reverse;
-        justify-content: center; /* توسيط الكتلة (الصورة + النص) في منتصف الصف */
-        align-items: center; /* التوسيط الرأسي داخل الصف */
-        gap: 15px; /* المسافة الفاصلة بين يسار الصورة وبداية العنوان */
-        border-bottom: 2px solid #ddd;
+        flex-direction: column;
+        background: #ffffff;
       }
 
-      .top-row h1 {
-        margin: 0; /* تصفير الهوامش التلقائية لتقريب النص من الصورة */
-        font-size: 1.8em;
-        direction: rtl; /* لضمان تنسيق الجملة العربية بشكل صحيح */
-        text-align: right; /* محاذاة النص باتجاه الصورة (جهة اليمين) */
-      }
-
-      .top-row .icon {
-        width: 110px;
-        height: auto;
-        margin: 0; /* إلغاء أي هوامش خارجية للأيقونة */
-      }
-
-      /* 3. تنسيق الصف السفلي (Data Display) - يمثل ثلثي الشاشة */
-      .bottom-row {
-        flex: 2; /* تحديد مساحة الثلثين المتبقية للقراءات */
-        background-color: #ffffff;
+      /* شريط التنقل والـ IP العلوي */
+      .top-nav {
+        background: #17232d;
+        color: #e6edf3;
+        padding: 10px 24px;
         display: flex;
-        flex-direction: row; /* عرض بطاقات الحساسات بجانب بعضها البعض */
-        justify-content: space-around; /* توزيع الحساسات بمسافات متساوية وتلقائية */
+        justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid #2b3d4a;
+        z-index: 10;
+        direction: ltr;
       }
-
-      /* 4. تنسيق بطاقة الحساس (Sensor Card) */
-      .sensor-card {
-        text-align: center; /* توسيط النصوص والأرقام تحت الأيقونة */
-        padding: 20px;
-      }
-
-      /* تنسيق الأيقونات الخاصة بالحرارة والرطوبة */
-      .icon {
-        width: 100px;
-        height: 100px;
-        display: block; /* جعل الأيقونة عنصراً مستقلاً ليظهر النص أسفلها */
-        margin: 0 auto 15px; /* توسيط الأيقونة أفقياً وترك مسافة تحتها */
-      }
-
-      /* 5. تنسيق النصوص والقيم الرقمية المستلمة */
-      .label-text {
-        font-weight: bold;
-        font-size: 1.3em;
-        color: #555;
-      }
-
-      #temp,
-      #humi {
-        font-size: 1.6em;
-        color: #2c3e50; /* لون غامق لتمييز القراءات الرقمية */
-        font-family:
-          "Courier New", Courier, monospace; /* خط رقمي يشبه شاشات الآلات */
-      }
-      /* زر العودة */
       .back-btn {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
         font-weight: 600;
         text-decoration: none;
         color: #08131b;
         background: #ffb300;
-        border-radius: 8px;
+        border-radius: 6px;
         transition:
-          transform 0.1s ease,
-          background 0.2s ease;
+          background 0.2s ease,
+          transform 0.1s ease;
       }
       .back-btn:hover {
         background: #ffa000;
@@ -100,14 +52,109 @@
       .back-btn:active {
         transform: scale(0.96);
       }
+      .ip-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #9fb6c4;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #3c4f5c;
+        background: #0d151c;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        width: 150px;
+        text-align: center;
+      }
+
+      /* الصف العلوي (Header) - توسيط مطلق ومحكم */
+      .top-row {
+        flex: 1;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: center; /* توسيط الكتلة في المنتصف */
+        align-items: center; /* توسيط رأسي */
+        border-bottom: 2px solid #ddd;
+        padding: 15px 20px;
+      }
+
+      /* الحاوية التي تجمع الأيقونة مع العنوان ككتلة واحدة في الوسط */
+      .header-content {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        direction: rtl; /* الأيقونة على يمين النص العربي أو يساره حسب الترتيب */
+      }
+
+      .header-content h1 {
+        margin: 0;
+        font-size: 1.8em;
+        color: #2c3e50;
+        white-space: nowrap; /* منع النص من النزول لسطر جديد */
+      }
+
+      .header-content .icon {
+        width: 90px;
+        height: auto;
+        display: block;
+      }
+
+      /* الصف السفلي (Data Display) */
+      .bottom-row {
+        flex: 2;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 20px;
+      }
+      .sensor-card {
+        text-align: center;
+        padding: 20px;
+      }
+      .sensor-card .icon {
+        width: 100px;
+        height: 100px;
+        display: block;
+        margin: 0 auto 15px;
+      }
+      .label-text {
+        font-weight: bold;
+        font-size: 1.3em;
+        color: #555;
+      }
+      #temp,
+      #humi {
+        font-size: 1.6em;
+        color: #2c3e50;
+        font-family: "Courier New", Courier, monospace;
+      }
     </style>
   </head>
   <body>
-    <div class="top-row">
-      <img src="temphumi.png" class="icon" alt="Temperature Icon" />
-      <h1>مراقبة درجة حرارة ورطوبة معمل التحكم الآلي</h1>
+    <!-- شريط العودة والـ IP -->
+    <div class="top-nav">
+      <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+      <div class="ip-box">
+        <label for="board_ip">Board IP:</label>
+        <input type="text" id="board_ip" value="192.168.1.68" />
+      </div>
     </div>
 
+    <!-- الصف العلوي مع جمع الصورة والعنوان في حاوية متمركزة -->
+    <div class="top-row">
+      <div class="header-content">
+        <img src="temphumi.png" class="icon" alt="Temperature Icon" />
+        <h1>مراقبة درجة حرارة ورطوبة معمل التحكم الآلي</h1>
+      </div>
+    </div>
+
+    <!-- الصف السفلي لقراءات الحساسات -->
     <div class="bottom-row">
       <div class="sensor-card">
         <img src="temp.png" class="icon" alt="Temperature" />
@@ -121,31 +168,29 @@
         <span id="humi">Loading...</span>
       </div>
     </div>
-    <!-- زر العودة إلى الصفحة الرئيسية -->
-    <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+
     <script>
-      // دالة لجلب البيانات من الـ Wemos D1 Mini باستخدام Fetch API
+      const ipInput = document.getElementById("board_ip");
+      if (localStorage.getItem("wemos_ip")) {
+        ipInput.value = localStorage.getItem("wemos_ip");
+      }
+      ipInput.addEventListener("change", () => {
+        localStorage.setItem("wemos_ip", ipInput.value.trim());
+      });
+
       async function loadData() {
+        const ip = ipInput.value.trim();
         try {
-          // إرسال طلب HTTP GET إلى العنوان المحلي للوحة
-          const response = await fetch("http://192.168.1.68");
-
-          // تحويل رد السيرفر من نص خام إلى كائن JSON برمجي
+          const response = await fetch("http://" + ip);
           const data = await response.json();
-
-          // تحديث العناصر في صفحة HTML بالقيم الحقيقية المستخرجة من الـ JSON
           document.getElementById("temp").textContent = data.temp + " °C";
           document.getElementById("humi").textContent = data.hum + " %";
         } catch (error) {
-          // في حال فشل الاتصال (أوفلاين)، يتم تسجيل الخطأ في المتصفح
-          console.error("خطأ في جلب البيانات:", error);
+          console.error("خطأ في جلب البيانات من " + ip, error);
         }
       }
 
-      // ضبط تنفيذ دالة الجلب بشكل متكرر كل ثانية واحدة (1000 ميلي ثانية)
       setInterval(loadData, 1000);
-
-      // استدعاء الدالة فور تحميل الصفحة لأول مرة دون انتظار مرور ثانية
       loadData();
     </script>
   </body>
