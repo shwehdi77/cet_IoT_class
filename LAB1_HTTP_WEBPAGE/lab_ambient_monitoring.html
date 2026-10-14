@@ -179,6 +179,27 @@
         font-weight: bold;
         color: #bdc3c7;
       }
+      /* زر العودة */
+      .back-btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #08131b;
+        background: #ffb300;
+        border-radius: 8px;
+        transition:
+          transform 0.1s ease,
+          background 0.2s ease;
+      }
+      .back-btn:hover {
+        background: #ffa000;
+      }
+      .back-btn:active {
+        transform: scale(0.96);
+      }
     </style>
   </head>
   <body>
@@ -234,7 +255,8 @@
         </div>
       </div>
     </div>
-
+    <!-- زر العودة إلى الصفحة الرئيسية -->
+    <a href="index.html" class="back-btn">← العودة للرئيسية</a>
     <script>
       function updateDateTime() {
         const now = new Date();
@@ -253,7 +275,7 @@
 
       async function loadTemp() {
         try {
-          const response = await fetch("http://192.168.1.13");
+          const response = await fetch("http://192.168.1.68");
           if (!response.ok) throw new Error();
 
           const data = await response.json();
