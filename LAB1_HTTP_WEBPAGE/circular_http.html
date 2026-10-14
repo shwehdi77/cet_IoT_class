@@ -6,7 +6,6 @@
     <title>لوحة مراقبة معمل التحكم - كلية التقنية الإلكترونية</title>
 
     <style>
-      /* --- 1. القواعد العامة والمتغيرات --- */
       :root {
         --bg-color: #1a1a2e;
         --card-color: #16213e;
@@ -29,16 +28,68 @@
         background-color: var(--bg-color);
         color: var(--sub-text);
         display: flex;
-        flex-direction: column; /* ترتيب العناصر عمودياً لجعل الهيدر في الأعلى */
+        flex-direction: column;
         height: 100vh;
         overflow: hidden;
       }
 
-      /* --- 2. الصف العلوي (ممتد ملء الشاشة) --- */
+      /* شريط علوي موحد للعودة والـ IP */
+      .top-nav {
+        background-color: #111424;
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--accent-color);
+        z-index: 110;
+        direction: ltr; /* لضبط تموضع الزر والحقل بطريقة مريحة */
+      }
+
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #08131b;
+        background: #ffb300;
+        border-radius: 6px;
+        transition:
+          background 0.2s ease,
+          transform 0.1s ease;
+      }
+      .back-btn:hover {
+        background: #ffa000;
+      }
+      .back-btn:active {
+        transform: scale(0.96);
+      }
+
+      .ip-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #bdc3c7;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #3c4f5c;
+        background: #0d151c;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        width: 150px;
+        text-align: center;
+      }
+
+      /* الصف العلوي الرئيسي */
       .top-header {
         width: 100%;
         background-color: var(--card-color);
-        padding: 1.5rem 0;
+        padding: 1rem 0;
         text-align: center;
         border-bottom: 2px solid var(--accent-color);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
@@ -46,24 +97,23 @@
       }
 
       .top-header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
         color: var(--sub-text);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.3rem;
       }
 
       .top-header p {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: var(--text-color);
       }
 
-      /* --- 3. الحاوية الرئيسية (تجمع السايدبار والمحتوى) --- */
+      /* الحاوية الرئيسية */
       .app-container {
         display: flex;
-        flex: 1; /* تأخذ باقي ارتفاع الشاشة بعد الهيدر */
+        flex: 1;
         width: 100%;
       }
 
-      /* القائمة الجانبية */
       .sidebar {
         width: 250px;
         background-color: var(--card-color);
@@ -98,7 +148,6 @@
         margin-top: 5px;
       }
 
-      /* منطقة العرض الرئيسية */
       .main-content {
         flex: 1;
         display: flex;
@@ -116,8 +165,8 @@
         background-color: var(--card-color);
         padding: 2.5rem;
         border-radius: 20px;
-        width: 320px;
-        height: 320px;
+        width: 300px;
+        height: 300px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -127,10 +176,9 @@
       }
 
       .sensor-card:hover {
-        transform: translateY(-10px);
+        transform: translateY(-8px);
       }
 
-      /* --- 4. الدوائر (SVG) باستخدام متغيرات CSS --- */
       .progress-container {
         position: relative;
         width: 160px;
@@ -155,7 +203,6 @@
         stroke-width: 15px;
         stroke-linecap: round;
         stroke-dasharray: 440;
-        /* الحساب بناءً على المتغيرات القادمة من السكريبت */
         stroke-dashoffset: calc(440 - (var(--p, 0) / var(--max, 100)) * 440);
         transition: stroke-dashoffset 1s ease-in-out;
       }
@@ -174,35 +221,23 @@
       }
 
       .sensor-label {
-        margin-top: 2rem;
-        font-size: 1.6rem;
+        margin-top: 1.5rem;
+        font-size: 1.5rem;
         font-weight: bold;
         color: #bdc3c7;
-      }
-      /* زر العودة */
-      .back-btn {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        text-decoration: none;
-        color: #08131b;
-        background: #ffb300;
-        border-radius: 8px;
-        transition:
-          transform 0.1s ease,
-          background 0.2s ease;
-      }
-      .back-btn:hover {
-        background: #ffa000;
-      }
-      .back-btn:active {
-        transform: scale(0.96);
       }
     </style>
   </head>
   <body>
+    <!-- الشريط العلوي للتنقل وإعدادات الـ IP -->
+    <div class="top-nav">
+      <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+      <div class="ip-box">
+        <label for="board_ip">Board IP:</label>
+        <input type="text" id="board_ip" value="192.168.1.68" />
+      </div>
+    </div>
+
     <div class="top-header">
       <h1>كلية التقنية الإلكترونية-طرابلس</h1>
       <p>مراقبة درجة الحرارة والرطوبة بمعمل التحكم الآلي</p>
@@ -255,9 +290,16 @@
         </div>
       </div>
     </div>
-    <!-- زر العودة إلى الصفحة الرئيسية -->
-    <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+
     <script>
+      const ipInput = document.getElementById("board_ip");
+      if (localStorage.getItem("wemos_ip")) {
+        ipInput.value = localStorage.getItem("wemos_ip");
+      }
+      ipInput.addEventListener("change", () => {
+        localStorage.setItem("wemos_ip", ipInput.value.trim());
+      });
+
       function updateDateTime() {
         const now = new Date();
         document.getElementById("time").textContent =
@@ -274,17 +316,15 @@
       }
 
       async function loadTemp() {
+        const ip = ipInput.value.trim();
         try {
-          const response = await fetch("http://192.168.1.68");
+          const response = await fetch("http://" + ip);
           if (!response.ok) throw new Error();
 
           const data = await response.json();
-          console.log("Data updated: ", data);
-          // تحديث النصوص
           document.getElementById("temp-value").textContent = data.temp + "°C";
           document.getElementById("humi-value").textContent = data.hum + "%";
 
-          // تحديث المتغيرات في CSS (بدون معادلات في السكريبت)
           const tempCircle = document.getElementById("temp-circle");
           const humiCircle = document.getElementById("humi-circle");
 
@@ -294,7 +334,6 @@
           humiCircle.style.setProperty("--p", data.hum);
           humiCircle.style.setProperty("--max", 100);
         } catch (error) {
-          console.log("error: ", error);
           document.getElementById("temp-value").textContent = "---";
           document.getElementById("humi-value").textContent = "---";
           document.getElementById("temp-circle").style.setProperty("--p", 0);
