@@ -5,36 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Temperature & Humidity</title>
     <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
         font-family: "Segoe UI", Arial, sans-serif;
         background: #101820;
         color: #e6edf3;
-        padding: 24px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
-      .reading {
-        font-size: 1.2rem;
-        margin-bottom: 12px;
+      /* شريط التنقل العلوي */
+      .nav-bar {
+        background: #17232d;
+        border-bottom: 1px solid #2b3d4a;
+        padding: 12px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
       }
-      .label-text {
-        color: #8fe3ff;
-      }
-      .unit {
-        color: #9fb6c4;
-      }
-      /* زر العودة */
       .back-btn {
-        display: inline-block;
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
         font-weight: 600;
         text-decoration: none;
         color: #08131b;
         background: #ffb300;
-        border-radius: 8px;
+        border-radius: 6px;
         transition:
-          transform 0.1s ease,
-          background 0.2s ease;
+          background 0.2s ease,
+          transform 0.1s ease;
       }
       .back-btn:hover {
         background: #ffa000;
@@ -42,44 +50,97 @@
       .back-btn:active {
         transform: scale(0.96);
       }
+      .ip-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #9fb6c4;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #3c4f5c;
+        background: #0d151c;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        width: 150px;
+        text-align: center;
+      }
+      /* منطقة المحتوى */
+      .content {
+        padding: 40px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        gap: 16px;
+      }
+      .reading {
+        font-size: 1.6rem;
+      }
+      .label-text {
+        color: #8fe3ff;
+      }
+      .unit {
+        color: #9fb6c4;
+      }
+      #status-msg {
+        font-size: 0.85rem;
+        color: #ff5370;
+        min-height: 1.2em;
+      }
     </style>
   </head>
   <body>
-    <div class="reading">
-      <span class="label-text">Temp = </span>
-      <span id="temp">Loading...</span>
-      <span class="unit">°C</span>
-    </div>
-    <div class="reading">
-      <span class="label-text">Humi = </span>
-      <span id="humi">Loading...</span>
-      <span class="unit"> %</span>
+    <div class="nav-bar">
+      <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+      <div class="ip-box">
+        <label for="board_ip">Board IP:</label>
+        <input type="text" id="board_ip" value="192.168.1.68" />
+      </div>
     </div>
 
-    <!-- زر العودة إلى الصفحة الرئيسية -->
-    <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+    <div class="content">
+      <div class="reading">
+        <span class="label-text">Temp = </span>
+        <span id="temp">Loading...</span>
+        <span class="unit">°C</span>
+      </div>
+      <div class="reading">
+        <span class="label-text">Humi = </span>
+        <span id="humi">Loading...</span>
+        <span class="unit"> %</span>
+      </div>
+      <div id="status-msg"></div>
+    </div>
 
     <script>
-      // تعريف دالة غير متزامنة (async) لجلب القراءات من اللوحة دون تجميد الواجهة
+      const ipInput = document.getElementById("board_ip");
+      if (localStorage.getItem("wemos_ip")) {
+        ipInput.value = localStorage.getItem("wemos_ip");
+      }
+      ipInput.addEventListener("change", () => {
+        localStorage.setItem("wemos_ip", ipInput.value.trim());
+      });
+
       async function loadTemp() {
+        const ip = ipInput.value.trim();
+        const msgEl = document.getElementById("status-msg");
         try {
-          // إرسال طلب HTTP GET إلى IP لوحة Wemos وانتظار استلام الرد
-          const response = await fetch("http://192.168.1.68");
-          // تحويل نص الرد المستلم إلى كائن برمجي بتنسيق JSON
+          const response = await fetch("http://" + ip);
+          if (!response.ok) throw new Error("HTTP error " + response.status);
           const data = await response.json();
-          // تحديث محتوى عنصر الحرارة في الصفحة بالقيمة القادمة من الحساس (data.temp)
           document.getElementById("temp").textContent = data.temp;
-          // تحديث محتوى عنصر الرطوبة في الصفحة بالقيمة القادمة من الحساس (data.hum)
           document.getElementById("humi").textContent = data.hum;
-          // طباعة البيانات المستلمة في Console المتصفح لأغراض المراقبة والتصحيح
-          console.log("Data updated: ", data);
+          msgEl.textContent = "";
         } catch (error) {
-          console.error("فشل الاتصال باللوحة: ", error);
+          msgEl.textContent = "تعذر الاتصال باللوحة (" + ip + ")";
         }
       }
-      // استدعاء الدالة لمرة واحدة فور فتح الصفحة لعرض البيانات مباشرة
+
       loadTemp();
-      // ضبط مؤقت زمني لتكرار تنفيذ الدالة تلقائياً كل 1000 ملي ثانية (ثانية واحدة)
       setInterval(loadTemp, 1000);
     </script>
   </body>
