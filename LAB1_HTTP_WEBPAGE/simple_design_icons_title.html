@@ -79,6 +79,27 @@
         font-family:
           "Courier New", Courier, monospace; /* خط رقمي يشبه شاشات الآلات */
       }
+      /* زر العودة */
+      .back-btn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #08131b;
+        background: #ffb300;
+        border-radius: 8px;
+        transition:
+          transform 0.1s ease,
+          background 0.2s ease;
+      }
+      .back-btn:hover {
+        background: #ffa000;
+      }
+      .back-btn:active {
+        transform: scale(0.96);
+      }
     </style>
   </head>
   <body>
@@ -100,13 +121,14 @@
         <span id="humi">Loading...</span>
       </div>
     </div>
-
+    <!-- زر العودة إلى الصفحة الرئيسية -->
+    <a href="index.html" class="back-btn">← العودة للرئيسية</a>
     <script>
       // دالة لجلب البيانات من الـ Wemos D1 Mini باستخدام Fetch API
       async function loadData() {
         try {
           // إرسال طلب HTTP GET إلى العنوان المحلي للوحة
-          const response = await fetch("http://192.168.1.13");
+          const response = await fetch("http://192.168.1.68");
 
           // تحويل رد السيرفر من نص خام إلى كائن JSON برمجي
           const data = await response.json();
