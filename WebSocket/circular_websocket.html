@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>لوحة مراقبة معمل التحكم - كلية التقنية الإلكترونية</title>
+
+    <style>
+      :root {
+        --bg-color: #1a1a2e;
+        --card-color: #16213e;
+        --accent-color: #0f3460;
+        --text-color: #e94560;
+        --sub-text: #ffffff;
+        --temp-color: #ff4757;
+        --humi-color: #2ed573;
+        --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font-family);
+        background-color: var(--bg-color);
+        color: var(--sub-text);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* شريط علوي موحد للعودة والـ IP */
+      .top-nav {
+        background-color: #111424;
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--accent-color);
+        z-index: 110;
+        direction: ltr; /* لضبط تموضع الزر والحقل بطريقة مريحة */
+      }
+
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #08131b;
+        background: #ffb300;
+        border-radius: 6px;
+        transition:
+          background 0.2s ease,
+          transform 0.1s ease;
+      }
+      .back-btn:hover {
+        background: #ffa000;
+      }
+      .back-btn:active {
+        transform: scale(0.96);
+      }
+
+      .ip-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #bdc3c7;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #3c4f5c;
+        background: #0d151c;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        width: 150px;
+        text-align: center;
+      }
+
+      /* الصف العلوي الرئيسي */
+      .top-header {
+        width: 100%;
+        background-color: var(--card-color);
+        padding: 1rem 0;
+        text-align: center;
+        border-bottom: 2px solid var(--accent-color);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        z-index: 100;
+      }
+
+      .top-header h1 {
+        font-size: 1.8rem;
+        color: var(--sub-text);
+        margin-bottom: 0.3rem;
+      }
+
+      .top-header p {
+        font-size: 1.1rem;
+        color: var(--text-color);
+      }
+
+      /* الحاوية الرئيسية */
+      .app-container {
+        display: flex;
+        flex: 1;
+        width: 100%;
+      }
+
+      .sidebar {
+        width: 250px;
+        background-color: var(--card-color);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-left: 2px solid var(--accent-color);
+      }
+
+      .sidebar h2 {
+        color: var(--text-color);
+        font-size: 1.5rem;
+        text-align: center;
+      }
+
+      .datetime-container {
+        text-align: center;
+        background-color: var(--bg-color);
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      #time {
+        font-size: 1.6rem;
+        font-weight: bold;
+      }
+      #date {
+        font-size: 0.85rem;
+        color: #bdc3c7;
+        margin-top: 5px;
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+      }
+
+      .dashboard-grid {
+        display: flex;
+        gap: 4rem;
+      }
+
+      .sensor-card {
+        background-color: var(--card-color);
+        padding: 2.5rem;
+        border-radius: 20px;
+        width: 300px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s ease;
+      }
+
+      .sensor-card:hover {
+        transform: translateY(-8px);
+      }
+
+      .progress-container {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      svg {
+        transform: rotate(-90deg);
+      }
+
+      .circle-bg {
+        fill: none;
+        stroke: #2c3e50;
+        stroke-width: 15px;
+      }
+
+      .circle-progress {
+        fill: none;
+        stroke-width: 15px;
+        stroke-linecap: round;
+        stroke-dasharray: 440;
+        stroke-dashoffset: calc(440 - (var(--p, 0) / var(--max, 100)) * 440);
+        transition: stroke-dashoffset 1s ease-in-out;
+      }
+
+      #temp-circle {
+        stroke: var(--temp-color);
+      }
+      #humi-circle {
+        stroke: var(--humi-color);
+      }
+
+      .progress-value {
+        position: absolute;
+        font-size: 2.2rem;
+        font-weight: bold;
+      }
+
+      .sensor-label {
+        margin-top: 1.5rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #bdc3c7;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- الشريط العلوي للتنقل وإعدادات الـ IP -->
+    <div class="top-nav">
+      <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+      <div class="ip-box">
+        <label for="board_ip">Board IP:</label>
+        <input type="text" id="board_ip" value="192.168.1.68" />
+      </div>
+    </div>
+
+    <div class="top-header">
+      <h1>كلية التقنية الإلكترونية-طرابلس</h1>
+      <p>مراقبة درجة الحرارة والرطوبة بمعمل التحكم الآلي</p>
+    </div>
+
+    <div class="app-container">
+      <div class="sidebar">
+        <h2>لوحة التحكم</h2>
+        <div class="datetime-container">
+          <div id="time">00:00:00</div>
+          <div id="date">جاري التحميل...</div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="dashboard-grid">
+          <div class="sensor-card">
+            <div class="progress-container">
+              <svg width="160" height="160">
+                <circle class="circle-bg" cx="80" cy="80" r="70"></circle>
+                <circle
+                  class="circle-progress"
+                  id="temp-circle"
+                  cx="80"
+                  cy="80"
+                  r="70"
+                ></circle>
+              </svg>
+              <div class="progress-value" id="temp-value">--°C</div>
+            </div>
+            <div class="sensor-label">الحرارة</div>
+          </div>
+
+          <div class="sensor-card">
+            <div class="progress-container">
+              <svg width="160" height="160">
+                <circle class="circle-bg" cx="80" cy="80" r="70"></circle>
+                <circle
+                  class="circle-progress"
+                  id="humi-circle"
+                  cx="80"
+                  cy="80"
+                  r="70"
+                ></circle>
+              </svg>
+              <div class="progress-value" id="humi-value">--%</div>
+            </div>
+            <div class="sensor-label">الرطوبة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const ipInput = document.getElementById("board_ip");
+      if (localStorage.getItem("wemos_ip")) {
+        ipInput.value = localStorage.getItem("wemos_ip");
+      }
+      ipInput.addEventListener("change", () => {
+        localStorage.setItem("wemos_ip", ipInput.value.trim());
+      });
+      // 1. تحديث الوقت والتاريخ (نفس دالتك السابقة)
+      function updateDateTime() {
+        const now = new Date();
+        document.getElementById("time").textContent =
+          now.toLocaleTimeString("ar-EG");
+        document.getElementById("date").textContent = now.toLocaleDateString(
+          "ar-EG",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          },
+        );
+      }
+      setInterval(updateDateTime, 1000);
+      updateDateTime();
+
+      // 2. برمجة الـ WebSocket لاستقبال البياناتS
+      // استبدل العنوان التالي بـ IP الخاص بلوحة الـ Wemos عندك
+      const gateway = "ws://" + ipInput.value.trim() + ":81/";
+      let socket;
+
+      function initWebSocket() {
+        console.log("جاري محاولة الاتصال بالـ WebSocket...");
+        socket = new WebSocket(gateway);
+
+        // عند فتح الاتصال بنجاح
+        socket.onopen = () => console.log("تم الاتصال باللوحة بنجاح");
+
+        // عند حدوث خطأ أو انقطاع الاتصال (حاول إعادة الاتصال بعد 3 ثواني)
+        socket.onclose = () => setTimeout(initWebSocket, 3000);
+
+        // أهم جزئية: استقبال البيانات ومعالجتها
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log("بيانات مستلمة: ", data);
+
+          // تحديث النصوص في الواجهة
+          document.getElementById("temp-value").textContent = data.temp + "°C";
+          document.getElementById("humi-value").textContent = data.hum + "%";
+
+          // تحديث الدوائر الرسومية عبر متغيرات CSS
+          const tempCircle = document.getElementById("temp-circle");
+          const humiCircle = document.getElementById("humi-circle");
+
+          tempCircle.style.setProperty("--p", data.temp);
+          tempCircle.style.setProperty("--max", 50); // أقصى درجة حرارة متوقعة
+
+          humiCircle.style.setProperty("--p", data.hum);
+          humiCircle.style.setProperty("--max", 100); // أقصى رطوبة 100%
+        };
+      }
+
+      // تشغيل الـ WebSocket عند تحميل الصفحة
+      window.onload = initWebSocket;
+    </script>
+  </body>
+</html>
