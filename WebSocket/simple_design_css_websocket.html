@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Temperature & Humidity</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #101820;
+        color: #e6edf3;
+        padding: 24px;
+      }
+      /* إعدادات شريط العودة والـ IP */
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .back-btn {
+        display: inline-block;
+        padding: 8px 18px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #08131b;
+        background: #ffb300;
+        border-radius: 8px;
+        transition:
+          transform 0.1s ease,
+          background 0.2s ease;
+      }
+      .back-btn:hover {
+        background: #ffa000;
+      }
+      .back-btn:active {
+        transform: scale(0.96);
+      }
+      .ip-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #9fb6c4;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #3c4f5c;
+        background: #0d151c;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        width: 150px;
+      }
+      .reading {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+      }
+      .label-text {
+        color: #8fe3ff;
+      }
+      .unit {
+        color: #9fb6c4;
+      }
+      #status-msg {
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: #ff5370;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- شريط علوي يجمع زر العودة وخانة الـ IP -->
+    <div class="top-bar">
+      <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+      <div class="ip-box">
+        <label for="board_ip">Board IP:</label>
+        <input type="text" id="board_ip" value="192.168.1.68" />
+      </div>
+    </div>
+
+    <div class="reading">
+      <span class="label-text">Temp = </span>
+      <span id="temp">Loading...</span>
+      <span class="unit">°C</span>
+    </div>
+    <div class="reading">
+      <span class="label-text">Humi = </span>
+      <span id="humi">Loading...</span>
+      <span class="unit"> %</span>
+    </div>
+    <div id="status-msg"></div>
+
+    <script>
+      const ipInput = document.getElementById("board_ip");
+      if (localStorage.getItem("wemos_ip")) {
+        ipInput.value = localStorage.getItem("wemos_ip");
+      }
+      ipInput.addEventListener("change", () => {
+        localStorage.setItem("wemos_ip", ipInput.value.trim());
+      });
+
+      // دالة جلب القراءات باستخدام الـ IP المدخل
+      const gateway = "ws://" + ipInput.value.trim() + ":81/";
+      let socket;
+
+      function initWebSocket() {
+        console.log("جاري محاولة الاتصال بالـ WebSocket...");
+        socket = new WebSocket(gateway);
+
+        // عند فتح الاتصال بنجاح
+        socket.onopen = () => console.log("تم الاتصال باللوحة بنجاح");
+
+        // عند حدوث خطأ أو انقطاع الاتصال (حاول إعادة الاتصال بعد 3 ثواني)
+        socket.onclose = () => setTimeout(initWebSocket, 3000);
+
+        // أهم جزئية: استقبال البيانات ومعالجتها
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log("بيانات مستلمة: ", data);
+
+          // تحديث النصوص في الواجهة
+          document.getElementById("temp").textContent = data.temp + "°C";
+          document.getElementById("humi").textContent = data.hum + "%";
+        };
+      }
+
+      // تشغيل الـ WebSocket عند تحميل الصفحة
+      window.onload = initWebSocket;
+    </script>
+  </body>
+</html>
