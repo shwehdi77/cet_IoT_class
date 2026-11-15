@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - Wemos D1 Mini</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body,
+      html {
+        height: 100%;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+      }
+
+      /* شريط التنقل والـ IP العلوي */
+      .top-nav {
+        background: #17232d;
+        color: #e6edf3;
+        padding: 10px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #2b3d4a;
+        z-index: 10;
+        direction: ltr;
+      }
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #08131b;
+        background: #ffb300;
+        border-radius: 6px;
+        transition:
+          background 0.2s ease,
+          transform 0.1s ease;
+      }
+      .back-btn:hover {
+        background: #ffa000;
+      }
+      .back-btn:active {
+        transform: scale(0.96);
+      }
+      .ip-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: #9fb6c4;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #3c4f5c;
+        background: #0d151c;
+        color: #e6edf3;
+        font-size: 0.95rem;
+        width: 150px;
+        text-align: center;
+      }
+
+      /* الصف العلوي (Header) - توسيط مطلق ومحكم */
+      .top-row {
+        flex: 1;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: center; /* توسيط الكتلة في المنتصف */
+        align-items: center; /* توسيط رأسي */
+        border-bottom: 2px solid #ddd;
+        padding: 15px 20px;
+      }
+
+      /* الحاوية التي تجمع الأيقونة مع العنوان ككتلة واحدة في الوسط */
+      .header-content {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        direction: rtl; /* الأيقونة على يمين النص العربي أو يساره حسب الترتيب */
+      }
+
+      .header-content h1 {
+        margin: 0;
+        font-size: 1.8em;
+        color: #2c3e50;
+        white-space: nowrap; /* منع النص من النزول لسطر جديد */
+      }
+
+      .header-content .icon {
+        width: 90px;
+        height: auto;
+        display: block;
+      }
+
+      /* الصف السفلي (Data Display) */
+      .bottom-row {
+        flex: 2;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: 20px;
+      }
+      .sensor-card {
+        text-align: center;
+        padding: 20px;
+      }
+      .sensor-card .icon {
+        width: 100px;
+        height: 100px;
+        display: block;
+        margin: 0 auto 15px;
+      }
+      .label-text {
+        font-weight: bold;
+        font-size: 1.3em;
+        color: #555;
+      }
+      #temp,
+      #humi {
+        font-size: 1.6em;
+        color: #2c3e50;
+        font-family: "Courier New", Courier, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- شريط العودة والـ IP -->
+    <div class="top-nav">
+      <a href="index.html" class="back-btn">← العودة للرئيسية</a>
+      <div class="ip-box">
+        <label for="board_ip">Board IP:</label>
+        <input type="text" id="board_ip" value="192.168.1.68" />
+      </div>
+    </div>
+
+    <!-- الصف العلوي مع جمع الصورة والعنوان في حاوية متمركزة -->
+    <div class="top-row">
+      <div class="header-content">
+        <img src="temphumi.png" class="icon" alt="Temperature Icon" />
+        <h1>مراقبة درجة حرارة ورطوبة معمل التحكم الآلي</h1>
+      </div>
+    </div>
+
+    <!-- الصف السفلي لقراءات الحساسات -->
+    <div class="bottom-row">
+      <div class="sensor-card">
+        <img src="temp.png" class="icon" alt="Temperature" />
+        <span class="label-text">Temp = </span>
+        <span id="temp">Loading...</span>
+      </div>
+
+      <div class="sensor-card">
+        <img src="humi.png" class="icon" alt="Humidity" />
+        <span class="label-text">Humi = </span>
+        <span id="humi">Loading...</span>
+      </div>
+    </div>
+
+    <script>
+      const ipInput = document.getElementById("board_ip");
+      if (localStorage.getItem("wemos_ip")) {
+        ipInput.value = localStorage.getItem("wemos_ip");
+      }
+      ipInput.addEventListener("change", () => {
+        localStorage.setItem("wemos_ip", ipInput.value.trim());
+      });
+
+      // async function loadData() {
+      //   const ip = ipInput.value.trim();
+      //   try {
+      //     const response = await fetch("http://" + ip);
+      //     const data = await response.json();
+      //     document.getElementById("temp").textContent = data.temp + " °C";
+      //     document.getElementById("humi").textContent = data.hum + " %";
+      //   } catch (error) {
+      //     console.error("خطأ في جلب البيانات من " + ip, error);
+      //   }
+      // }
+
+      // setInterval(loadData, 1000);
+      // loadData();
+      const gateway = "ws://" + ipInput.value.trim() + ":81/";
+      let socket;
+
+      function initWebSocket() {
+        console.log("جاري محاولة الاتصال بالـ WebSocket...");
+        socket = new WebSocket(gateway);
+
+        // عند فتح الاتصال بنجاح
+        socket.onopen = () => console.log("تم الاتصال باللوحة بنجاح");
+
+        // عند حدوث خطأ أو انقطاع الاتصال (حاول إعادة الاتصال بعد 3 ثواني)
+        socket.onclose = () => setTimeout(initWebSocket, 3000);
+
+        // أهم جزئية: استقبال البيانات ومعالجتها
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log("بيانات مستلمة: ", data);
+
+          // تحديث النصوص في الواجهة
+          document.getElementById("temp").textContent = data.temp + "°C";
+          document.getElementById("humi").textContent = data.hum + "%";
+        };
+      }
+
+      // تشغيل الـ WebSocket عند تحميل الصفحة
+      window.onload = initWebSocket;
+    </script>
+  </body>
+</html>
